@@ -19,7 +19,7 @@ Alle Posten werden von Hand erfasst. Es gibt keine Bankanbindung, und die Daten 
 <img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/10-monate.png" alt="Monatsübersicht" width="240">
 </p>
 
-**Inhalt:** [Funktionen](#funktionen) · [Installation](#installation-über-hacs) · [So funktioniert es](#so-funktioniert-das-haushaltsbuch) · [Anleitung](#anleitung) · [Die Knöpfe einer Buchung](#die-knöpfe-einer-buchung) · [Haushalt](#gemeinsames-haushaltsbuch) · [Gut zu wissen](#gut-zu-wissen)
+**Inhalt:** [Funktionen](#funktionen) · [Installation](#installation) · [So funktioniert es](#so-funktioniert-das-haushaltsbuch) · [Anleitung](#anleitung) · [Die Knöpfe einer Buchung](#die-knöpfe-einer-buchung) · [Haushalt](#gemeinsames-haushaltsbuch) · [Gut zu wissen](#gut-zu-wissen)
 
 ## Funktionen
 
@@ -42,21 +42,21 @@ Alle Posten werden von Hand erfasst. Es gibt keine Bankanbindung, und die Daten 
 - **Posten duplizieren**: Im geöffneten Posten unten auf **Duplizieren** tippen. Die Kopie übernimmt alle Einstellungen, Name, Betrag und den Rest passt du an und speicherst. Bisherige Buchungen werden nicht mitkopiert.
 - **Export und Import** der eigenen Posten als JSON-Datei, z.B. als Sicherung oder zum Umzug auf eine andere HA-Instanz. Beim Import wählbar: hinzufügen (Doppelte werden übersprungen) oder ersetzen
 
-## Installation über HACS
+## Installation
 
-Das Haushaltsbuch ist im HACS-Standardverzeichnis, du findest es direkt in HACS:
+Das Haushaltsbuch ist im HACS-Standardverzeichnis. Ab Home Assistant 2026.11 ist HACS als **Marketplace** eingebaut, davor brauchst du HACS als eigene Erweiterung.
 
 [![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FabianWeyerstall&repository=ha-haushaltsbuch&category=integration)
 
-1. In Home Assistant **HACS** öffnen und nach **Haushaltsbuch** suchen (oder den Knopf oben benutzen)
+1. **Einstellungen → Marketplace** öffnen und nach **Haushaltsbuch** suchen (vor 2026.11: **HACS** in der Seitenleiste, oder den Knopf oben benutzen)
 2. **Herunterladen** und Home Assistant neu starten
 3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Haushaltsbuch**
 4. In der Seitenleiste erscheint **Haushaltsbuch**, auch in der Home-Assistant-App auf dem iPhone
 
 <details>
-<summary>Falls es in HACS nicht auftaucht: als benutzerdefiniertes Repository hinzufügen</summary>
+<summary>Falls es nicht auftaucht: als benutzerdefiniertes Repository hinzufügen</summary>
 
-1. HACS öffnen → oben rechts ⋮ → **Benutzerdefinierte Repositories**
+1. Marketplace bzw. HACS öffnen → oben rechts ⋮ → **Benutzerdefinierte Repositories**
 2. `https://github.com/FabianWeyerstall/ha-haushaltsbuch` als Typ **Integration** hinzufügen
 3. Weiter mit Schritt 2 oben
 

@@ -20,7 +20,7 @@ All items are entered by hand. There is no bank connection, and the data stays i
 <img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/10-months.png" alt="Monthly overview" width="240">
 </p>
 
-**Contents:** [Features](#features) · [Installation](#installation-via-hacs) · [How it works](#how-it-works) · [Guide](#guide) · [Booking buttons](#the-buttons-of-a-booking) · [Shared household](#shared-household-book) · [Good to know](#good-to-know)
+**Contents:** [Features](#features) · [Installation](#installation) · [How it works](#how-it-works) · [Guide](#guide) · [Booking buttons](#the-buttons-of-a-booking) · [Shared household](#shared-household-book) · [Good to know](#good-to-know)
 
 ## Features
 
@@ -45,21 +45,21 @@ All items are entered by hand. There is no bank connection, and the data stays i
 - **Incognito mode** that blurs all amounts, e.g. when showing the app to friends
 - **Contract notice reminders** as an HA event plus ready-made blueprints (English and German) for phone notifications
 
-## Installation via HACS
+## Installation
 
-Haushaltsbuch is in the HACS default store, so you can find it directly in HACS:
+Haushaltsbuch is in the HACS default store. From Home Assistant 2026.11 on, HACS is built in as the **Marketplace**; before that you need HACS as a separate add-on.
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FabianWeyerstall&repository=ha-haushaltsbuch&category=integration)
 
-1. In Home Assistant, open **HACS** and search for **Haushaltsbuch** (or use the button above)
+1. Open **Settings → Marketplace** and search for **Haushaltsbuch** (before 2026.11: **HACS** in the sidebar, or use the button above)
 2. **Download** it and restart Home Assistant
 3. **Settings → Devices & services → Add integration → Haushaltsbuch**
 4. **Haushaltsbuch** appears in the sidebar (the sidebar title is the same for all users), also in the Home Assistant companion app
 
 <details>
-<summary>If it does not show up in HACS: add it as a custom repository</summary>
+<summary>If it does not show up: add it as a custom repository</summary>
 
-1. Open HACS → ⋮ (top right) → **Custom repositories**
+1. Open the Marketplace or HACS → ⋮ (top right) → **Custom repositories**
 2. Add `https://github.com/FabianWeyerstall/ha-haushaltsbuch` with type **Integration**
 3. Continue with step 2 above
 
