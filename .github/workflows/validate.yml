@@ -16,6 +16,16 @@ jobs:
       - run: pip install -r requirements_test.txt
       - run: pytest -q
 
+  panel:
+    # Safety net for the CSV import in the panel (tests/panel/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/panel/*.test.mjs
+
   hassfest:
     runs-on: ubuntu-latest
     steps:

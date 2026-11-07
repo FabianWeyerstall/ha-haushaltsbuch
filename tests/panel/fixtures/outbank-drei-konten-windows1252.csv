@@ -1,0 +1,18 @@
+Umsätze Export
+#;Konto;Datum;Valuta;Betrag;Währung;Name;Nummer;Bank;Zweck;Hauptkategorie;Kategorie;Kategoriepfad;Tags;Notiz;Abweichender Zahlungsempfänger;Buchungsschlüssel;Buchungstext;Art der Zahlung;SEPA Referenz;Kundenreferenz;Mandatsreferenz;Gläubiger ID
+1;DE00111111110000000001;30.10.2026;30.10.2026;2.700,00;EUR;Muster Arbeitgeber GmbH;DE00999999990000000000;MUSTDEFFXXX;Gehalt Oktober;Einkommen;Gehalt;Einkommen/Gehalt;;;;105;LOHN GEHALT;;;;;
+2;DE00111111110000000001;02.10.2026;02.10.2026;-850,00;EUR;Hausverwaltung Sonnenhof;DE00999999990000000000;MUSTDEFFXXX;Miete Wohnung 3 OG;Wohnen;Miete;Wohnen/Miete;;;;105;DAUERAUFTRAG;;;;;
+3;DE00111111110000000001;05.10.2026;05.10.2026;-300,00;EUR;Eigenes Tagesgeld;DE00222222220000000002;MUSTDEFFXXX;Umbuchung Tagesgeld;Finanzen & Versicherungen;Sparen;Finanzen/Sparen;;;;105;UEBERWEISUNG;;;;;
+4;DE00222222220000000002;05.10.2026;05.10.2026;300,00;EUR;Max Mustermann;DE00111111110000000001;MUSTDEFFXXX;Umbuchung Tagesgeld;Finanzen & Versicherungen;Sparen;Finanzen/Sparen;;;;105;GUTSCHRIFT;;;;;
+5;DE00111111110000000001;12.10.2026;12.10.2026;-150,00;EUR;Max Mustermann;;;Rücklage;Sonstiges;Umbuchung;Sonstiges/Umbuchung;;;;105;UEBERWEISUNG;;;;;
+6;DE00222222220000000002;14.10.2026;14.10.2026;150,00;EUR;Max Mustermann;;;Rücklage;Sonstiges;Umbuchung;Sonstiges/Umbuchung;;;;105;GUTSCHRIFT;;;;;
+7;DE00111111110000000001;15.10.2026;15.10.2026;-512,34;EUR;Kreditkarten-Abrechnung;;;Kreditkartenabrechnung 10/2026;Sonstiges;Bankgebühren;Sonstiges/Bankgebühren;;;;105;LASTSCHRIFT;;;;KK-77;DE55ZZZ00000000005
+8;DE00333333330000000003;21.10.2026;21.10.2026;512,34;EUR;Ausgleich;;;Kartenabrechnung Ausgleich;Sonstiges;Umbuchung;Sonstiges/Umbuchung;;;;105;GUTSCHRIFT;;;;;
+9;DE00333333330000000003;08.10.2026;08.10.2026;-89,90;EUR;Elektromarkt Nord;;;"Kauf; Filiale 12
+Kabel und Lampe";Haushalt;Elektronik;Haushalt/Elektronik;;;;105;KARTENZAHLUNG;;;;;
+10;DE00111111110000000001;04.10.2026;04.10.2026;-74,00;EUR;Stadtwerke Musterstadt;DE00999999990000000000;MUSTDEFFXXX;"Abschlag Strom ""Grundversorgung""";Lebenshaltung;Strom;Lebenshaltung/Strom;;;;105;FOLGELASTSCHRIFT;;;;SW-998877;DE33ZZZ00000000003
+11;DE00111111110000000001;04.10.2026;04.10.2026;0,00;EUR;Nullbuchung;DE00999999990000000000;MUSTDEFFXXX;Kontoabschluss;Sonstiges;Bankgebühren;Sonstiges/Bankgebühren;;;;105;ABSCHLUSS;;;;;
+12;DE00111111110000000001;;;-5,00;EUR;Ohne Datum;DE00999999990000000000;MUSTDEFFXXX;kaputte Zeile;Sonstiges;;;;;;105;;;;;;
+13;DE00111111110000000001;20.10.2026;20.10.2026;-18,36;EUR;ARD ZDF Deutschlandradio Beitragsservice;DE00999999990000000000;MUSTDEFFXXX;Rundfunkbeitrag;Lebenshaltung;Rundfunk;Lebenshaltung/Rundfunk;;;;105;FOLGELASTSCHRIFT;;;;RB-1;DE66ZZZ00000000006
+14;DE00111111110000000001;28.10.2026;28.10.2026;1.234,56;EUR;Einspeisung Solar eG;DE00999999990000000000;MUSTDEFFXXX;Einspeisevergütung PV;Einkommen;Photovoltaik;Einkommen/Photovoltaik;;;;105;GUTSCHRIFT;;;;;
+15;DE00111111110000000001;31.10.2026;31.10.2026;-1.050,00;EUR;Autohaus Beispiel;DE00999999990000000000;MUSTDEFFXXX;Finanzierung Rate 14/48;Mobilität;Kredit;Mobilität/Kredit;;;;105;LASTSCHRIFT;;;;AF-1;DE77ZZZ00000000007
