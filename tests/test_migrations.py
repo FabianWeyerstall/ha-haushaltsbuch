@@ -75,7 +75,7 @@ def test_backups_carry_versions_and_old_ones_still_restore():
     document = backups.make_document(book, backups.Ledger(), "manual")
     assert document["book_version"] == list(BOOK_VERSION)
     assert document["ledger_version"] == list(LEDGER_VERSION)
-    # backups from 0.10.0rc4 and earlier have no version
+    # backups from 0.10.0rc7 and earlier have no version
     old = {"format": backups.BACKUP_FORMAT, "version": 1, "created": "2026-11-06T10:00:00+01:00", "reason": "manual",
            "book": fixture("haushaltsbuch.data-1.1-erste-version.json")["data"], "ledger": {"users": {}}}
     backups.check_document(old)

@@ -30,7 +30,7 @@ Step = Callable[[dict[str, Any]], dict[str, Any]]
 BOOK_VERSION: Version = (1, 2)
 LEDGER_VERSION: Version = (1, 1)
 
-# Files written before versions were kept (up to 0.10.0rc4) are 1.1.
+# Files written before versions were kept (up to 0.10.0rc7) are 1.1.
 UNVERSIONED: Version = (1, 1)
 
 

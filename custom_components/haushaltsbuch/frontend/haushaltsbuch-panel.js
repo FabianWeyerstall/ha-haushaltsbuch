@@ -265,7 +265,7 @@ const BANK_ALIASES = {
   debit: ["soll", "belastung", "ausgang", "debit", "abgang", "lastschrift (eur)", "soll (eur)"],
   credit: ["haben", "gutschrift", "eingang", "credit", "zugang", "haben (eur)"],
   sign: ["soll/haben", "s/h", "soll haben", "kennung", "debit/credit", "credit/debit indicator"],
-  name: ["name", "empfaenger", "zahlungsempfaenger", "zahlungsempfaenger*in", "auftraggeber/empfaenger", "auftraggeber / beguenstigter", "beguenstigter/zahlungspflichtiger", "beguenstigter/auftraggeber", "auftraggeber/zahlungsempfaenger", "empfaenger/zahlungspflichtiger", "name zahlungsbeteiligter", "name des zahlungsbeteiligten", "zahlungsbeteiligter", "gegenpartei", "payee", "counterparty", "partner name", "beneficiary", "name gegenkonto"],
+  name: ["name", "empfaenger", "zahlungsempfaenger", "zahlungsempfaenger*in", "auftraggeber/empfaenger", "auftraggeber / beguenstigter", "beguenstigter/zahlungspflichtiger", "beguenstigter/auftraggeber", "auftraggeber/zahlungsempfaenger", "empfaenger/zahlungspflichtiger", "name zahlungsbeteiligter", "name des zahlungsbeteiligten", "zahlungsbeteiligter", "gegenpartei", "payee", "counterparty", "partner name", "beneficiary", "name gegenkonto", "gegenueber", "gegenkonto name"],
   // Some banks name the payer of incoming money in a column of its own.
   payer: ["zahlungspflichtige*r", "zahlungspflichtiger", "auftraggeber", "auftraggeber*in", "payer"],
   purpose: ["verwendungszweck", "zweck", "vorgang/verwendungszweck", "verwendungszweck/ kundenreferenz", "buchungsdetails", "beschreibung", "purpose", "description", "payment reference", "reference", "details"],
@@ -294,7 +294,8 @@ function decodeBankBytes(buffer) {
 }
 
 function detectDelimiter(text) {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim()).slice(0, 40);
+  // Separators inside quoted text ("Miete; Garage") don't count.
+  const lines = text.split(/\r?\n/).filter((l) => l.trim()).slice(0, 40).map((l) => l.replace(/"[^"]*"/g, '""'));
   let best = ";";
   let bestScore = -1;
   for (const d of [";", "\t", ",", "|"]) {
@@ -425,6 +426,95 @@ function guessBankLayout(text) {
   };
 }
 
+const IBAN_RE = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
+const CREDITOR_RE = /^[A-Z]{2}\d{2}[A-Z0-9]{3}[A-Z0-9]{3,28}$/;
+const MONEY_RE = /^[-+(]?\s?\d{1,3}([.,'\s]?\d{3})*([.,]\d{1,2})?\s?(€|eur)?\s?[-)SH]?$/i;
+
+/** How well the values of a column fit a field: {fit, of} over the first data rows. */
+function columnFit(rows, headerRow, index, field, dateFormat, decimal) {
+  const values = rows.slice(headerRow + 1, headerRow + 41).map((r) => String(r[index] ?? "").trim());
+  const filled = values.filter(Boolean);
+  const test = {
+    date: (v) => Boolean(parseDateAs(v, dateFormat)),
+    amount: (v) => MONEY_RE.test(v) && Number.isFinite(parseMoneyCell(v, decimal)),
+    debit: (v) => MONEY_RE.test(v),
+    credit: (v) => MONEY_RE.test(v),
+    sign: (v) => /^(s|h|soll|haben|d|c|dbit|crdt|debit|credit|\+|-)$/i.test(v),
+    account: (v) => IBAN_RE.test(v.replace(/\s/g, "").toUpperCase()) || /^\d{5,12}$/.test(v),
+    counter: (v) => IBAN_RE.test(v.replace(/\s/g, "").toUpperCase()) || /^\d{5,12}$/.test(v),
+    creditor: (v) => CREDITOR_RE.test(v.replace(/\s/g, "").toUpperCase()) && /ZZZ/i.test(v),
+    mandate: (v) => /^[\w./+-]{3,35}$/.test(v),
+  }[field] || ((v) => /\p{L}/u.test(v));
+  // Debit and credit columns are often empty in every other row.
+  const base = ["debit", "credit"].includes(field) ? filled : values;
+  return { fit: base.filter((v) => v && test(v)).length, of: base.length };
+}
+
+/**
+ * Columns suggested from their contents, for files whose headings say nothing.
+ * Keeps what the headings already gave.
+ */
+function suggestColumns(rows, headerRow, columns, dateFormat, decimal) {
+  const result = { ...columns };
+  const suggested = new Set();
+  const width = Math.max(0, ...rows.slice(headerRow, headerRow + 20).map((r) => r.length));
+  const used = new Set(Object.values(result));
+  const free = () => Array.from({ length: width }, (_, i) => i).filter((i) => !used.has(i));
+  const score = (i, field) => {
+    const f = columnFit(rows, headerRow, i, field, dateFormat, decimal);
+    return f.of ? f.fit / f.of : 0;
+  };
+  const take = (field, i) => { result[field] = i; used.add(i); suggested.add(field); };
+  const sample = (i) => rows.slice(headerRow + 1, headerRow + 41).map((r) => String(r[i] ?? "").trim());
+  if (result.date === undefined) {
+    const best = free().find((i) => score(i, "date") >= 0.8);
+    if (best !== undefined) take("date", best);
+  }
+  if (result.amount === undefined && result.debit === undefined && result.credit === undefined) {
+    const money = free().filter((i) => score(i, "amount") >= 0.8 && sample(i).some((v) => /\d/.test(v)));
+    // A column with minus signs is the amount; one without is often the balance.
+    const signed = money.find((i) => sample(i).some((v) => /^-|-$|^\(/.test(v)));
+    if (signed !== undefined) take("amount", signed);
+    else {
+      const halves = free().filter((i) => score(i, "debit") >= 0.8 && sample(i).some(Boolean) && sample(i).some((v) => !v));
+      if (halves.length >= 2) { take("debit", halves[0]); take("credit", halves[1]); }
+      else if (money.length) take("amount", money[0]);
+    }
+  }
+  if (result.creditor === undefined) {
+    const c = free().find((i) => sample(i).some((v) => /ZZZ/.test(v)) && score(i, "creditor") >= 0.3);
+    if (c !== undefined) take("creditor", c);
+  }
+  const ibans = free().filter((i) => score(i, "counter") >= 0.5 && sample(i).some((v) => IBAN_RE.test(v.replace(/\s/g, "").toUpperCase())));
+  for (const i of ibans) {
+    const distinct = new Set(sample(i).filter(Boolean)).size;
+    if (distinct === 1 && result.account === undefined) take("account", i);
+    else if (distinct > 1 && result.counter === undefined) take("counter", i);
+  }
+  const texts = free().map((i) => {
+    const v = sample(i).filter(Boolean);
+    return { i, share: score(i, "name"), len: v.reduce((a, x) => a + x.length, 0) / Math.max(1, v.length), distinct: new Set(v).size / Math.max(1, v.length) };
+  }).filter((t) => t.share >= 0.6);
+  // Text columns: a clearly longer one is the purpose; otherwise banks put the payee first.
+  const byLength = [...texts].sort((a, b) => b.len - a.len);
+  if (result.purpose === undefined && byLength.length && byLength[0].len >= 15 && (byLength.length === 1 || byLength[0].len >= 1.8 * byLength[1].len)) {
+    take("purpose", byLength[0].i);
+    texts.splice(texts.indexOf(byLength[0]), 1);
+  }
+  if (result.name === undefined && texts.length) take("name", texts[0].i);
+  if (result.purpose === undefined && texts.length > 1) take("purpose", texts[1].i);
+  return { columns: result, suggested };
+}
+
+/** The line with the headings when no known heading was found: the one above the first dated line. */
+function guessHeaderRow(rows) {
+  for (let i = 0; i < Math.min(40, rows.length); i++) {
+    const format = detectDateFormat(rows[i]);
+    if (rows[i].some((c) => parseDateAs(String(c).trim(), format)) && rows[i].filter((c) => String(c).trim()).length >= 3) return Math.max(0, i - 1);
+  }
+  return 0;
+}
+
 const bankSignature = (rows, headerRow) => (rows[headerRow] || []).map(normCell).join(";").slice(0, 300);
 
 /** Bookings of a CSV that is not from Outbank, with an optional hand-made profile. */
@@ -442,6 +532,8 @@ function parseGenericCsv(text, profiles = {}, force = null) {
   }
   const info = { ...layout, headerRow: Math.max(0, headerRow), columns, date: dateFormat, decimal };
   if (headerRow < 0 || columns.date === undefined || (columns.amount === undefined && columns.debit === undefined && columns.credit === undefined)) throw needsMapping(info);
+  // Without payee and purpose nothing could be matched: better ask once.
+  if (!profile && columns.name === undefined && columns.purpose === undefined) throw needsMapping(info);
   // Banks without an account column often name the IBAN above the table.
   const ibanAbove = rows.slice(0, headerRow).flat().map((c) => String(c).replace(/\s/g, "").toUpperCase()).find((c) => /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(c)) || "";
   const bookings = [];
@@ -535,8 +627,40 @@ function parseCamt(text) {
 }
 const isCamt = (text) => /<\?xml|<Document/i.test(text.slice(0, 500)) && /BkToCstmr(Stmt|AcctRpt)/.test(text.slice(0, 5000));
 
+// Upper limits so that a broken or manipulated file can't freeze the browser.
+const MAX_BANK_BYTES = 50 * 1024 * 1024;
+const MAX_ZIP_FILES = 100;
+const tooBig = (name) => new Error(tr(`„${name}“ ist zu groß (höchstens 50 MB).`, `“${name}” is too large (50 MB at most).`));
+
+/** Unpack deflated data, stopping as soon as it grows beyond the limit (ZIP bombs). */
+async function inflateCapped(data, name) {
+  const reader = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+  const parts = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_BANK_BYTES) {
+      await reader.cancel().catch(() => {});
+      throw tooBig(name);
+    }
+    parts.push(value);
+  }
+  return new Blob(parts).arrayBuffer();
+}
+
 /** The CSV and XML files inside a ZIP (CAMT exports often come zipped). */
 async function unzipBankFiles(buffer) {
+  try {
+    return await readZip(buffer);
+  } catch (err) {
+    if (err instanceof RangeError || err instanceof TypeError) throw new Error(tr("Die ZIP-Datei ist beschädigt.", "The ZIP file is damaged."));
+    throw err;
+  }
+}
+
+async function readZip(buffer) {
   const view = new DataView(buffer);
   let eocd = -1;
   for (let i = buffer.byteLength - 22; i >= Math.max(0, buffer.byteLength - 66000); i--) if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
@@ -554,11 +678,12 @@ async function unzipBankFiles(buffer) {
     const name = new TextDecoder().decode(new Uint8Array(buffer, p + 46, nameLen));
     p += 46 + nameLen + extraLen + commentLen;
     if (!/\.(xml|csv|txt)$/i.test(name) || name.startsWith("__MACOSX")) continue;
+    if (files.length >= MAX_ZIP_FILES) break;
     const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
     const data = new Uint8Array(buffer, start, size);
     let bytes;
     if (method === 0) bytes = data.slice().buffer;
-    else if (method === 8) bytes = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+    else if (method === 8) bytes = await inflateCapped(data, name);
     else continue;
     files.push({ name, text: decodeBankBytes(bytes) });
   }
@@ -569,10 +694,19 @@ async function unzipBankFiles(buffer) {
 async function readBankSources(files) {
   const sources = [];
   for (const f of files) {
+    if (f.size > MAX_BANK_BYTES) throw tooBig(f.name);
     const buffer = await f.arrayBuffer();
     const head = new Uint8Array(buffer, 0, Math.min(4, buffer.byteLength));
     if (head[0] === 0x50 && head[1] === 0x4b && head[2] === 3 && head[3] === 4) sources.push(...(await unzipBankFiles(buffer)).map((x) => ({ name: `${f.name}/${x.name}`, text: x.text })));
-    else sources.push({ name: f.name, text: decodeBankBytes(buffer) });
+    else {
+      const text = decodeBankBytes(buffer);
+      // Pictures, PDFs and other binary files: say so instead of guessing columns.
+      const sample = text.slice(0, 4000);
+      if (sample && (sample.match(/[\u0000-\u0008\u000e-\u001f\ufffd]/g) || []).length > sample.length / 20) {
+        throw new Error(tr(`„${f.name}“ ist keine Text- oder CSV-Datei.`, `“${f.name}” is not a text or CSV file.`));
+      }
+      sources.push({ name: f.name, text });
+    }
   }
   return sources;
 }
@@ -3539,10 +3673,21 @@ class HaushaltsbuchPanel extends HTMLElement {
 
   _openColumnDialog(sources, forced, index, info, manual = false) {
     const preview = info.rows.slice(0, 60);
+    if (info.headerRow < 0 || !manual && !Object.keys(info.columns).length) info.headerRow = guessHeaderRow(info.rows);
+    info.headerRow = Math.max(0, info.headerRow);
+    const sample = info.rows.slice(info.headerRow + 1, info.headerRow + 41);
+    if (!manual) {
+      const dates = sample.map((r) => r[info.columns.date]);
+      info.date = info.columns.date !== undefined ? detectDateFormat(dates) : detectDateFormat(sample.flat());
+      info.decimal = detectDecimal(sample.flat().filter((v) => MONEY_RE.test(String(v).trim())));
+    }
+    const s = manual ? { columns: info.columns, suggested: new Set() } : suggestColumns(info.rows, info.headerRow, info.columns, info.date, info.decimal);
+    info.columns = s.columns;
+    if (!manual && s.suggested.has("date")) info.date = detectDateFormat(sample.map((r) => r[info.columns.date]));
     this._error = null;
     this._dialog = {
       type: "csv-map", sources, forced, index, rows: preview, headerRow: info.headerRow, columns: { ...info.columns },
-      date: info.date, decimal: info.decimal, name: sources[index].name, total: info.rows.length, manual,
+      date: info.date, decimal: info.decimal, name: sources[index].name, total: info.rows.length, manual, suggested: [...s.suggested],
     };
     this._render();
   }
@@ -3551,24 +3696,42 @@ class HaushaltsbuchPanel extends HTMLElement {
     const header = d.rows[d.headerRow] || [];
     const width = Math.max(...d.rows.slice(d.headerRow, d.headerRow + 6).map((r) => r.length), 1);
     const colName = (i) => `${tr("Spalte", "Column")} ${i + 1}${String(header[i] ?? "").trim() ? `: ${String(header[i]).trim().slice(0, 30)}` : ""}`;
+    // [field, label, need, example]; need: "must", "one" (amount or debit/credit), "good" or "".
     const fields = [
-      ["date", tr("Datum", "Date"), true],
-      ["amount", tr("Betrag (mit Vorzeichen)", "Amount (signed)")],
-      ["debit", tr("oder: Ausgaben (Soll)", "or: money out (debit)")],
-      ["credit", tr("und: Einnahmen (Haben)", "and: money in (credit)")],
-      ["sign", tr("Soll/Haben-Kennzeichen (S/H)", "Debit/credit flag (S/H)")],
-      ["name", tr("Empfänger", "Payee"), true],
-      ["payer", tr("Zahler bei Einnahmen", "Payer of incoming money")],
-      ["purpose", tr("Verwendungszweck", "Purpose")],
-      ["category", tr("Kategorie", "Category")],
-      ["account", tr("Eigenes Konto", "Own account")],
-      ["mandate", tr("Mandatsreferenz", "Mandate reference")],
-      ["creditor", tr("Gläubiger-ID", "Creditor ID")],
+      ["date", tr("Datum", "Date"), "must", tr("z. B. 04.11.2026 oder 2026-11-04, meist „Buchungstag“", "e.g. 04.11.2026 or 2026-11-04, often “booking date”")],
+      ["amount", tr("Betrag", "Amount"), "one", tr("z. B. -74,00 für eine Abbuchung, 2.700,00 für Gehalt", "e.g. -74.00 for a debit, 2,700.00 for salary")],
+      ["debit", tr("Ausgaben (Soll)", "Money out (debit)"), "pair", tr("nur wenn die Bank Ausgaben und Einnahmen in zwei Spalten trennt, z. B. 74,00", "only if the bank splits money out and in into two columns, e.g. 74.00")],
+      ["credit", tr("Einnahmen (Haben)", "Money in (credit)"), "pair", tr("die zweite dieser Spalten, z. B. 2.700,00", "the second of these columns, e.g. 2,700.00")],
+      ["sign", tr("Soll/Haben-Kennzeichen", "Debit/credit flag"), "", tr("nur bei Beträgen ohne Minus: S oder H, Soll oder Haben", "only for amounts without minus: S or H, debit or credit")],
+      ["name", tr("Empfänger", "Payee"), "good", tr("wer das Geld bekommt, z. B. Stadtwerke Musterstadt", "who gets the money, e.g. Stadtwerke Musterstadt")],
+      ["payer", tr("Zahler bei Einnahmen", "Payer of incoming money"), "", tr("nur wenn die Bank dafür eine eigene Spalte hat, z. B. dein Arbeitgeber", "only if the bank has a column of its own for it, e.g. your employer")],
+      ["purpose", tr("Verwendungszweck", "Purpose"), "good", tr("z. B. Abschlag Strom Vertragskonto 998877", "e.g. electricity instalment contract 998877")],
+      ["category", tr("Kategorie", "Category"), "", tr("falls die Bank Kategorien liefert, z. B. Lebensmittel", "if the bank provides categories, e.g. groceries")],
+      ["account", tr("Eigenes Konto", "Own account"), "", tr("deine IBAN, wichtig bei mehreren Konten in einer Datei", "your IBAN, matters with several accounts in one file")],
+      ["mandate", tr("Mandatsreferenz", "Mandate reference"), "", tr("bei Lastschriften, z. B. SW-998877", "for direct debits, e.g. SW-998877")],
+      ["creditor", tr("Gläubiger-ID", "Creditor ID"), "", tr("bei Lastschriften, z. B. DE33ZZZ00000000003", "for direct debits, e.g. DE33ZZZ00000000003")],
     ];
-    const select = ([field, label]) => `<label>${label}<select data-change="csv-map" data-field="${field}">
-        <option value="-1">—</option>
-        ${Array.from({ length: width }, (_, i) => `<option value="${i}" ${d.columns[field] === i ? "selected" : ""}>${esc(colName(i))}</option>`).join("")}
-      </select></label>`;
+    const needLabel = { must: tr("Pflicht", "required"), one: tr("Pflicht, oder Soll + Haben", "required, or debit + credit"), pair: tr("statt Betrag", "instead of amount"), good: tr("empfohlen", "recommended"), "": tr("optional", "optional") };
+    const firstRow = d.rows[d.headerRow + 1] || [];
+    const select = ([field, label, need, example]) => {
+      const col = d.columns[field];
+      const value = col !== undefined && col >= 0 ? String(firstRow[col] ?? "").trim() : "";
+      let check = "";
+      if (col !== undefined && col >= 0) {
+        const f = columnFit(d.rows, d.headerRow, col, field, d.date, d.decimal);
+        const good = f.of && f.fit / f.of >= 0.8;
+        const what = { date: tr("wie ein Datum", "like a date"), amount: tr("wie ein Betrag", "like an amount"), debit: tr("wie ein Betrag", "like an amount"), credit: tr("wie ein Betrag", "like an amount"), account: tr("wie eine IBAN", "like an IBAN"), counter: tr("wie eine IBAN", "like an IBAN"), creditor: tr("wie eine Gläubiger-ID", "like a creditor ID"), sign: tr("wie S/H", "like S/H") }[field] || tr("wie Text", "like text");
+        check = `<span class="csv-check ${good ? "ok" : "warn"}">${good ? "✓" : "⚠"} ${tr(`${f.fit} von ${f.of} Zeilen sehen ${what} aus`, `${f.fit} of ${f.of} rows look ${what}`)}</span>`;
+      }
+      const hint = (d.suggested || []).includes(field) ? `<span class="csv-need good">${tr("Vorschlag", "suggested")}</span>` : "";
+      return `<label class="csv-map-field ${col !== undefined ? "set" : ""}"><span class="csv-map-label">${label} <span class="csv-need ${need || "opt"}">${needLabel[need]}</span>${hint}</span>
+        <select data-change="csv-map" data-field="${field}">
+          <option value="-1">—</option>
+          ${Array.from({ length: width }, (_, i) => `<option value="${i}" ${col === i ? "selected" : ""}>${esc(colName(i))}</option>`).join("")}
+        </select>
+        <span class="csv-map-example">${esc(example)}</span>
+        ${value ? `<span class="csv-map-value">${tr("in deiner Datei", "in your file")}: ${esc(value.slice(0, 60))}</span>` : ""}${check}</label>`;
+    };
     const sample = d.rows.slice(d.headerRow + 1, d.headerRow + 6);
     let test = null;
     try {
@@ -3583,8 +3746,10 @@ class HaushaltsbuchPanel extends HTMLElement {
       <label>${tr("Die Überschriften stehen in", "The headings are in")}<select data-change="csv-map" data-field="header_row">
         ${d.rows.slice(0, 30).map((r, i) => `<option value="${i}" ${i === d.headerRow ? "selected" : ""}>${tr("Zeile", "line")} ${i + 1}: ${esc(r.filter((c) => String(c).trim()).slice(0, 4).join(" · ").slice(0, 60))}</option>`).join("")}
       </select></label>
-      <div class="csv-map-table"><table><thead><tr>${Array.from({ length: width }, (_, i) => `<th>${esc(colName(i))}</th>`).join("")}</tr></thead>
-        <tbody>${sample.map((r) => `<tr>${Array.from({ length: width }, (_, i) => `<td>${esc(String(r[i] ?? "").slice(0, 40))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <div class="csv-map-table"><table><thead>
+        <tr>${Array.from({ length: width }, (_, i) => { const f = fields.find(([k]) => d.columns[k] === i); return `<th class="${f ? "on" : ""}">${f ? `<span class="csv-col-tag">${esc(f[1])}</span>` : `<span class="csv-col-tag off">${tr("nicht genutzt", "unused")}</span>`}</th>`; }).join("")}</tr>
+        <tr>${Array.from({ length: width }, (_, i) => `<th>${esc(colName(i))}</th>`).join("")}</tr></thead>
+        <tbody>${sample.map((r) => `<tr>${Array.from({ length: width }, (_, i) => `<td class="${fields.some(([k]) => d.columns[k] === i) ? "on" : ""}">${esc(String(r[i] ?? "").slice(0, 40))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
       <div class="grid csv-map-fields">${fields.map(select).join("")}
         <label>${tr("Datumsformat", "Date format")}<select data-change="csv-map" data-field="date_format">
           <option value="dmy" ${d.date === "dmy" ? "selected" : ""}>${tr("Tag.Monat.Jahr", "day.month.year")}</option>
@@ -3975,11 +4140,21 @@ class HaushaltsbuchPanel extends HTMLElement {
       const field = el.dataset.field;
       if (field === "header_row") {
         d.headerRow = Number(el.value);
-        d.columns = bankColumns(d.rows[d.headerRow] || []);
+        const s = suggestColumns(d.rows, d.headerRow, bankColumns(d.rows[d.headerRow] || []), d.date, d.decimal);
+        d.columns = s.columns;
+        d.suggested = [...s.suggested];
       } else if (field === "date_format") d.date = el.value;
       else if (field === "decimal_mark") d.decimal = el.value;
-      else if (Number(el.value) < 0) delete d.columns[field];
-      else d.columns[field] = Number(el.value);
+      else {
+        if (Number(el.value) < 0) delete d.columns[field];
+        else {
+          // One column, one meaning: a column chosen here leaves the field it had.
+          for (const [f, i] of Object.entries(d.columns)) if (i === Number(el.value) && f !== field) delete d.columns[f];
+          d.columns[field] = Number(el.value);
+        }
+        d.suggested = (d.suggested || []).filter((f) => f !== field);
+        if (field === "date" && d.columns.date !== undefined) d.date = detectDateFormat(d.rows.slice(d.headerRow + 1, d.headerRow + 41).map((r) => r[d.columns.date]));
+      }
       const scroll = this.shadowRoot.querySelector(".dialog")?.scrollTop || 0;
       this._render();
       const dialog = this.shadowRoot.querySelector(".dialog");
@@ -4710,6 +4885,19 @@ const STYLES = `
   .csv-map-table th, .csv-map-table td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--divider-color); }
   .csv-map-table th { background: var(--secondary-background-color); font-weight: 600; }
   .csv-map-fields label { font-size: 13px; }
+  .csv-map-table th.on, .csv-map-table td.on { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
+  .csv-col-tag { display: inline-block; font-size: 11px; font-weight: 600; color: var(--primary-color); }
+  .csv-col-tag.off { color: var(--secondary-text-color); font-weight: 400; }
+  .csv-check { font-size: 12px; }
+  .csv-check.ok { color: var(--success-color, #43a047); }
+  .csv-check.warn { color: var(--warning-color, #e68a00); }
+  .csv-map-field { display: flex; flex-direction: column; gap: 2px; }
+  .csv-map-label { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+  .csv-need { font-size: 11px; border-radius: 6px; padding: 0 6px; background: var(--secondary-background-color); color: var(--secondary-text-color); }
+  .csv-need.must, .csv-need.one { background: color-mix(in srgb, var(--error-color, #db4437) 14%, transparent); color: var(--error-color, #db4437); }
+  .csv-need.good { background: color-mix(in srgb, var(--primary-color) 14%, transparent); color: var(--primary-color); }
+  .csv-map-example { font-size: 12px; color: var(--secondary-text-color); }
+  .csv-map-value { font-size: 12px; color: var(--primary-text-color); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .csv-map-test { list-style: none; padding: 0; margin: 0; font-size: 13px; }
   .csv-map-test li { display: grid; grid-template-columns: 80px minmax(0, 1fr) auto; gap: 8px; padding: 4px 0; border-top: 1px solid var(--divider-color); }
   .csv-map-test li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

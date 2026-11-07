@@ -59,7 +59,7 @@ def summary(document: dict[str, Any]) -> dict[str, Any]:
 
 
 def upgrade(document: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Book and ledger of a backup in the current layout (backups before 0.10.0rc5 have no version)."""
+    """Book and ledger of a backup in the current layout (backups before 0.10.0rc8 have no version)."""
     try:
         book = migrate_book(version_of(document.get("book_version")), document["book"])
         ledger = migrate_ledger(version_of(document.get("ledger_version")), document.get("ledger") or {"users": {}})
