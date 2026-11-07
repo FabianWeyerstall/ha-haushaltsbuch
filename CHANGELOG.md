@@ -6,6 +6,15 @@ Ob nach einem Update ein Neustart von Home Assistant nötig ist, steht in den
 Release-Notes auf GitHub und in HACS. Der Hinweis wird beim Veröffentlichen
 automatisch aus den geänderten Dateien ermittelt (siehe `scripts/release_notes.py`).
 
+## 0.10.0rc10 – 2026-11-07
+
+### Neu
+- Monatsübersicht: Budgets zeigen im laufenden und in vergangenen Monaten „ausgegeben von Budget“ (z.B. „273,04 € von 428,57 €“), wie die Budget-Karte. Sammeltöpfe zeigen „X € ausgegeben“.
+
+### Geändert
+- Installation: Ab Home Assistant 2026.11 über Einstellungen → Marketplace.
+- Anleitung mit Bildern zu CSV-Import und Statistik.
+
 ## 0.10.0rc9 – 2026-11-07
 
 ### Neu

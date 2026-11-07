@@ -119,7 +119,7 @@ await step("Kopie hat alle Einstellungen", async () => {
   }
 });
 await step("Monate", tab("months"), "Monatsübersicht");
-await step("Monat aufklappen", click('[data-action="toggle-month"]'));
+await step("Monat aufklappen", click('[data-action="toggle-month"]'), "von 400");
 await step("Übersicht", tab("dashboard"), "Lebensmittel");
 await step("Budget-Ausgabe", click('[data-action="spending-new"]'), "Lebensmittel"); await close();
 await step("Haushalt", tab("households"), "Sicherungen");

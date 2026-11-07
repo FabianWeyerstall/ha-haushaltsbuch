@@ -34,7 +34,7 @@ export class TimelineView {
         <div class="entry-name">${esc(e.name)}</div>
         <div class="entry-meta">${special ? `<span class="chip special">★ ${esc(scheduleLabel(special))}</span> ` : ""}${esc(e.category)} ${owner} ${status}</div>
       </div>
-      <div class="entry-amount ${e.amount < 0 ? "neg" : "pos"}">${this._money(e.amount, true)}</div>
+      <div class="entry-amount ${e.amount < 0 ? "neg" : "pos"}">${e.budget_total == null ? this._money(e.amount, true) : e.budget_total > 0 ? `${this._money(e.budget_spent)} ${tr("von", "of")} ${this._money(e.budget_total)}` : `${this._money(e.budget_spent)} ${tr("ausgegeben", "spent")}`}</div>
       ${confirm ? `<div class="entry-actions">
         <button class="small" data-action="quick-confirm" data-status="booked" data-item="${esc(e.item_id)}" data-due="${esc(e.due_date)}">${tr("gebucht", "booked")}</button>
         <button class="small secondary" data-action="quick-confirm" data-status="skipped" data-item="${esc(e.item_id)}" data-due="${esc(e.due_date)}">${tr("ausgefallen", "skipped")}</button>

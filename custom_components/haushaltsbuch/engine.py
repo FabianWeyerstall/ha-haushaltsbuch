@@ -591,6 +591,25 @@ def budget_amounts(
     return result
 
 
+def budget_in_range(
+    item: dict[str, Any], start: date, end: date, find_period: PeriodFinder = calendar_period
+) -> tuple[float, float]:
+    """Budget and recorded spendings of the days start..end (pro rata per period)."""
+    budget = 0.0
+    day = start
+    while day <= end:
+        if _budget_active(item, day):
+            begin, stop = find_period(day)
+            budget += abs(amount_on(item, day)) / ((stop - begin).days + 1)
+        day += timedelta(days=1)
+    spent = sum(
+        abs(float(s.get("amount") or 0))
+        for s in item.get("spendings") or []
+        if start.isoformat() <= str(s.get("date")) <= end.isoformat()
+    )
+    return budget, spent
+
+
 def budget_status(
     item: dict[str, Any], today: date | None = None, find_period: PeriodFinder = calendar_period
 ) -> dict[str, Any]:
@@ -840,6 +859,11 @@ def month_summaries(
                     "budget": True,
                 }
             )
+            if month_start <= (today or date.today()):
+                # Started months show "spent of budget", like the budget card.
+                budget, spent = budget_in_range(item, month_start, month_end, find_period)
+                entries[-1]["budget_total"] = round(budget, 2)
+                entries[-1]["budget_spent"] = round(spent, 2)
         entries.sort(key=lambda e: e["date"])
         summary["net"] = summary["income"] - summary["expense"]
         summary = {k: round(v, 2) if isinstance(v, float) else v for k, v in summary.items()}
