@@ -16,8 +16,9 @@ Konten raus → Abgleich mit Posten und Vorschläge. Das Ergebnis muss exakt der
 gespeicherten Datei in `expected/` entsprechen. Ändert sich irgendetwas daran,
 wie Outbank-Dateien gelesen oder zugeordnet werden, schlägt der Test fehl.
 
-Das Panel selbst wird dafür **nicht verändert**: `load-panel.mjs` liest die
-Datei unverändert in einer Sandbox ein und holt sich die Funktionen heraus.
+Die Panel-Dateien sind normale ES-Module. `load-panel.mjs` lädt sie in Node
+genau so, wie der Browser sie lädt. `modules.test.mjs` prüft zusätzlich, dass
+jede Datei findet, was sie importiert.
 
 | Datei | Inhalt |
 | --- | --- |

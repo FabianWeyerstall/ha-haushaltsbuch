@@ -8,7 +8,8 @@ from pathlib import Path
 import voluptuous as vol
 
 from homeassistant.components import frontend, panel_custom
-from homeassistant.components.http import StaticPathConfig
+from aiohttp import web
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
@@ -45,6 +46,30 @@ from .websocket_api import async_register_websocket_commands
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 STATIC_REGISTERED = f"{DOMAIN}_static_registered"
+FRONTEND_DIR = Path(__file__).parent / "frontend"
+FRONTEND_TYPES = {".js": "text/javascript", ".json": "application/json"}
+
+
+class PanelFilesView(HomeAssistantView):
+    """Serves the panel files; the browser asks every time whether they changed.
+
+    The panel consists of several JavaScript modules. With "no-cache" the
+    browser checks each of them on every load (a cheap 304 if unchanged), so
+    after an update it never mixes an old file with a new one, and reloading
+    the page is enough for panel-only updates.
+    """
+
+    url = PANEL_STATIC_URL + "/{filename}"
+    name = f"{DOMAIN}:panel_files"
+    requires_auth = False  # like the frontend's own files: code only, no data
+
+    async def get(self, request: web.Request, filename: str) -> web.StreamResponse:
+        path = FRONTEND_DIR / filename
+        if "/" in filename or "\\" in filename or path.suffix not in FRONTEND_TYPES or not path.is_file():
+            raise web.HTTPNotFound
+        return web.FileResponse(
+            path, headers={"Cache-Control": "no-cache", "Content-Type": FRONTEND_TYPES[path.suffix]}
+        )
 
 
 class VersionedStore(Store):
@@ -225,15 +250,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = data
     entry.runtime_data = data
 
-    # Static paths cannot be removed again, so register them once per HA run.
+    # Views cannot be removed again, so register the panel files once per HA run.
     if not hass.data.get(STATIC_REGISTERED):
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    PANEL_STATIC_URL, str(Path(__file__).parent / "frontend"), False
-                )
-            ]
-        )
+        hass.http.register_view(PanelFilesView())
         hass.data[STATIC_REGISTERED] = True
 
     if PANEL_URL_PATH not in hass.data.get(frontend.DATA_PANELS, {}):

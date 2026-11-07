@@ -206,3 +206,16 @@ async def test_add_expense_service_and_budget_status(hass: HomeAssistant, hass_w
         {"type": f"{DOMAIN}/spending/delete", "item_id": budget["id"], "spending_id": spending_id}
     )
     assert (await client.receive_json())["success"]
+
+
+async def test_panel_files_are_served_without_cache(hass: HomeAssistant, hass_client_no_auth) -> None:
+    await _setup(hass)
+    client = await hass_client_no_auth()
+    for name in ("haushaltsbuch-panel.js", "bank-import.js", "format.js", "mdi-icons.json"):
+        res = await client.get(f"/haushaltsbuch_static/{name}?v=1")
+        assert res.status == 200, name
+        assert res.headers["Cache-Control"] == "no-cache"
+    assert (await client.get("/haushaltsbuch_static/haushaltsbuch-panel.js")).headers["Content-Type"].startswith("text/javascript")
+    # only the panel's own files
+    for name in ("..%2F__init__.py", "manifest.json", "../const.py", "x.js"):
+        assert (await client.get(f"/haushaltsbuch_static/{name}")).status in (400, 404), name

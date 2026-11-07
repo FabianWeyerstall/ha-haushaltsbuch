@@ -36,7 +36,7 @@ function importLikePanel(panel, fixture, items = [], history = {}, entries = [])
   return { kind: parsed.kind, isOutbank: panel.isOutbankCsv(text), read, transfers, kept, analysis };
 }
 
-const panel = loadPanel();
+const panel = await loadPanel();
 panel.setLanguage("de");
 
 for (const fixture of ["outbank-ein-konto.csv", "outbank-drei-konten-utf8-bom.csv"]) {
