@@ -33,8 +33,11 @@ jobs:
   browser:
     # Real Home Assistant + Chromium: every tab, the main dialogs and the CSV import (tests/browser).
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # normally about 3 minutes
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the tag of the last normal release, for the update test
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -47,6 +50,8 @@ jobs:
       - run: npm install --no-save --no-package-lock playwright@1.49.1
       - run: npx playwright install --with-deps chromium
       - run: tests/browser/run.sh
+      - name: Update from the last normal release
+        run: tests/browser/upgrade.sh
 
   hassfest:
     runs-on: ubuntu-latest
