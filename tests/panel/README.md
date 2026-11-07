@@ -22,8 +22,9 @@ Datei unverändert in einer Sandbox ein und holt sich die Funktionen heraus.
 | Datei | Inhalt |
 | --- | --- |
 | `outbank-ein-konto.csv` | ein Girokonto, 316 Umsätze über 14 Monate (die Demo-Datei aus den Screenshots) |
-| `outbank-drei-konten-utf8-bom.csv` | Giro, Tagesgeld, Kreditkarte: Umbuchungen, Kreditkarten-Abrechnung, Feld mit `;` und Zeilenumbruch, Tausenderpunkt, Nullbetrag, Zeile ohne Datum, UTF-8 mit BOM und CRLF |
+| `outbank-drei-konten-utf8-bom.csv` | Giro, Tagesgeld, Kreditkarte: Umbuchungen, Kreditkarten-Abrechnung, Buchung ohne Namen, Feld mit `;` und Zeilenumbruch, Tausenderpunkt, Nullbetrag, Zeile ohne Datum, UTF-8 mit BOM und CRLF |
 | `outbank-drei-konten-windows1252.csv` | dieselbe Datei in Windows-1252, muss gleich gelesen werden |
+| `make-fixtures.py` | erzeugt die beiden Drei-Konten-Dateien |
 
 Alle Namen, IBANs und Beträge sind erfunden. **Keine echten Kontoauszüge
 einchecken**, das Repository ist öffentlich.

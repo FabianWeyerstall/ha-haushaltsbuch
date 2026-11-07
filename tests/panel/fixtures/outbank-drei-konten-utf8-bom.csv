@@ -16,3 +16,5 @@ Kabel und Lampe";Haushalt;Elektronik;Haushalt/Elektronik;;;;105;KARTENZAHLUNG;;;
 13;DE00111111110000000001;20.10.2026;20.10.2026;-18,36;EUR;ARD ZDF Deutschlandradio Beitragsservice;DE00999999990000000000;MUSTDEFFXXX;Rundfunkbeitrag;Lebenshaltung;Rundfunk;Lebenshaltung/Rundfunk;;;;105;FOLGELASTSCHRIFT;;;;RB-1;DE66ZZZ00000000006
 14;DE00111111110000000001;28.10.2026;28.10.2026;1.234,56;EUR;Einspeisung Solar eG;DE00999999990000000000;MUSTDEFFXXX;Einspeisevergütung PV;Einkommen;Photovoltaik;Einkommen/Photovoltaik;;;;105;GUTSCHRIFT;;;;;
 15;DE00111111110000000001;31.10.2026;31.10.2026;-1.050,00;EUR;Autohaus Beispiel;DE00999999990000000000;MUSTDEFFXXX;Finanzierung Rate 14/48;Mobilität;Kredit;Mobilität/Kredit;;;;105;LASTSCHRIFT;;;;AF-1;DE77ZZZ00000000007
+16;DE00111111110000000001;29.10.2026;29.10.2026;-4,95;EUR;;;;Kontoführungsentgelt Oktober 2026 laut Preisaushang der Filiale;Sonstiges;Bankgebühren;Sonstiges/Bankgebühren;;;;105;ENTGELT;;;;;
+17;DE00333333330000000003;18.10.2026;18.10.2026;-1.299,00;EUR;Möbelhaus Süd;;;Sofa;Haushalt;Möbel;Haushalt/Möbel;;;;105;KARTENZAHLUNG;;;;;

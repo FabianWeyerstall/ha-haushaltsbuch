@@ -56,11 +56,12 @@ test("Outbank: Windows-1252 file reads the same as UTF-8", () => {
 
 test("Outbank: three accounts drop own transfers and card settlement", () => {
   const result = importLikePanel(panel, "outbank-drei-konten-utf8-bom.csv");
-  // 15 lines, of which the zero amount and the line without date are skipped.
-  assert.equal(result.read.length, 13);
+  // 17 lines, of which the zero amount and the line without date are skipped.
+  assert.equal(result.read.length, 15);
   // Giro→Tagesgeld (IBAN), Rücklage (same amount, 2 days), card settlement (6 days).
   assert.equal(result.transfers, 6);
   assert.ok(result.read.some((b) => b.purpose === "Kauf; Filiale 12\nKabel und Lampe"), "quoted field with ; and line break");
+  assert.ok(result.read.some((b) => b.name === "Kontoführungsentgelt Oktober 2026 laut P" && b.amount === -4.95), "no name: start of the purpose");
   assert.ok(result.read.some((b) => b.amount === 2700 && b.name === "Muster Arbeitgeber GmbH"), "thousands separator");
 });
 
