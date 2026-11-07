@@ -314,6 +314,8 @@ Tab **Household** → **Backups** (HA admins only): **Back up now** saves everyt
 
 Tab **Entries** → **Import** also takes CSV files of transactions from your banking app, several at once (one per account). The file is only read in the browser; nothing is saved until you apply the dialog.
 
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/16-csv-import.png" alt="Matching transactions" width="260">
+
 - **New regular payments** (salary, rent, insurance, subscriptions …) are suggested with schedule, next date and certainty. Payments that stopped months ago (old flat, cancelled contract) are not suggested.
 - **Matches your entries:** bookings of existing entries are confirmed with their real date and amount, card payments become spendings of the matching budget. If the amount changed for good, a price change is offered. The book remembers which direct debit belongs to which entry.
 - **Rare or irregular:** yearly fees, annual statements (back payment or refund) and rolling entries like the hairdresser, not ticked at first.
@@ -329,7 +331,12 @@ Tab **Entries** → **Import** also takes CSV files of transactions from your ba
 
 ## Statistics
 
-When importing a CSV you can **save all transactions for statistics**. They are kept in a separate file in your Home Assistant (`.storage/haushaltsbuch.ledger`) and only you can see them. The **Statistics** tab shows per year or for all years: income, spending, what is left (compared with the year before; in the running year with the same period), the history per year or month and spending by category with sub categories and biggest payees. For all years, each category shows how it developed from the first to the last full year. **Delete all** removes the saved transactions.
+When importing a CSV you can **save all transactions for statistics**. They are kept in a separate file in your Home Assistant (`.storage/haushaltsbuch.ledger`) and only you can see them. The **Statistics** tab shows per month, per year or for all years: income, spending, what is left (compared with the year before; in the running year with the same period), the history and spending by category with sub categories and biggest payees. Tap a month, category or payee to see its transactions. For all years, each category shows how it developed from the first to the last full year.
+
+**Insights** lists forgotten subscriptions (regular debits without an entry), budgets from real numbers, the price development of your contracts, expensive months, a year in review and your personal inflation. **Delete all** removes the saved transactions.
+
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/17-statistics.png" alt="Statistics of one month" width="240">
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/18-insights.png" alt="Insights" width="240">
 
 ## Incognito mode
 

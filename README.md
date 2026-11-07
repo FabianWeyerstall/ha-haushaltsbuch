@@ -324,6 +324,8 @@ Tab **Haushalt** → **Sicherungen** (nur für HA-Admins): **Jetzt sichern** spe
 
 Tab **Posten** → **Importieren** nimmt neben der Export-Datei auch CSV-Dateien mit Umsätzen aus deiner Banking-App, auch mehrere auf einmal (eine pro Konto). Die Datei wird nur im Browser gelesen. Gespeichert wird erst, was du im Dialog übernimmst.
 
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/16-csv-import.png" alt="Umsätze abgleichen" width="260">
+
 - **Neue regelmäßige Zahlungen** (Gehalt, Miete, Versicherungen, Abos …) werden mit Turnus, nächstem Termin und Sicherheitsstufe vorgeschlagen. Was seit Monaten nicht mehr kommt (alte Wohnung, gekündigter Vertrag), wird nicht vorgeschlagen.
 - **Passt zu deinen Posten:** Buchungen zu vorhandenen Posten werden mit echtem Datum und Betrag abgehakt, Kartenzahlungen landen als Ausgaben im passenden Budget. Weicht der Betrag dauerhaft ab, wird eine Preisänderung angeboten. Das Haushaltsbuch merkt sich, welche Lastschrift zu welchem Posten gehört.
 - **Selten oder unregelmäßig:** jährliche Beiträge, Jahresabrechnungen (Nachzahlung oder Erstattung) und gleitende Posten wie der Friseur, zunächst nicht angehakt.
@@ -339,7 +341,12 @@ Tab **Posten** → **Importieren** nimmt neben der Export-Datei auch CSV-Dateien
 
 ## Statistik
 
-Beim CSV-Import kannst du alle Umsätze **für die Statistik speichern**. Sie liegen in einer eigenen Datei in deinem Home Assistant (`.storage/haushaltsbuch.ledger`) und sind nur für dich sichtbar. Der Tab **Statistik** zeigt pro Jahr oder über alle Jahre: eingenommen, ausgegeben, übrig (mit Vergleich zum Vorjahr, im laufenden Jahr zum gleichen Zeitraum), den Verlauf pro Jahr oder Monat und die Ausgaben nach Kategorie mit Unterkategorien und den größten Empfängern. Über alle Jahre steht neben jeder Kategorie, wie sie sich vom ersten zum letzten vollen Jahr entwickelt hat. **Alle löschen** entfernt die gespeicherten Umsätze wieder.
+Beim CSV-Import kannst du alle Umsätze **für die Statistik speichern**. Sie liegen in einer eigenen Datei in deinem Home Assistant (`.storage/haushaltsbuch.ledger`) und sind nur für dich sichtbar. Der Tab **Statistik** zeigt pro Monat, pro Jahr oder über alle Jahre: eingenommen, ausgegeben, übrig (mit Vergleich zum Vorjahr, im laufenden Jahr zum gleichen Zeitraum), den Verlauf und die Ausgaben nach Kategorie mit Unterkategorien und den größten Empfängern. Monate, Kategorien und Empfänger lassen sich antippen und zeigen die einzelnen Umsätze. Über alle Jahre steht neben jeder Kategorie, wie sie sich vom ersten zum letzten vollen Jahr entwickelt hat.
+
+Unter **Auswertungen** stehen vergessene Abos (regelmäßige Abbuchungen ohne Posten), Budgets aus echten Zahlen, die Preisentwicklung deiner Verträge, teure Monate, ein Jahresrückblick und dein persönlicher Preisanstieg. **Alle löschen** entfernt die gespeicherten Umsätze wieder.
+
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/17-statistik.png" alt="Statistik eines Monats" width="240">
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/18-auswertungen.png" alt="Auswertungen" width="240">
 
 ## Inkognito-Modus
 

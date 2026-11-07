@@ -17,7 +17,7 @@ for _ in $(seq 1 120); do
   curl -sf "http://127.0.0.1:$PORT/api/onboarding" > /dev/null && break
   sleep 2
 done
-if ! HA_URL="http://127.0.0.1:$PORT" HA_CONFIG="$CONFIG" node "$REPO/tests/browser/smoke.mjs"; then
+if ! HA_URL="http://127.0.0.1:$PORT" HA_CONFIG="$CONFIG" node "$REPO/tests/browser/${SCRIPT:-smoke.mjs}"; then
   echo "---- Home Assistant log ----"; grep -i "haushaltsbuch\|error" "$CONFIG/hass.log" | tail -60
   exit 1
 fi

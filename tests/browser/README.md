@@ -16,6 +16,13 @@ npm install --no-save playwright && npx playwright install chromium
 tests/browser/run.sh          # anderer Port: HA_PORT=8124 tests/browser/run.sh
 ```
 
+Die Bilder für CSV-Import und Statistik im README entstehen mit demselben Aufbau:
+
+```bash
+SCRIPT=doc-shots.mjs SHOTS=docs/images DOC_LANG=de tests/browser/run.sh
+SCRIPT=doc-shots.mjs SHOTS=docs/images/en DOC_LANG=en tests/browser/run.sh
+```
+
 ## Update von der letzten normalen Version
 
 `upgrade.sh` prüft das Update, das Nutzer ohne Beta-Versionen machen: Home
