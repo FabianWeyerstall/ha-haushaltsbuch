@@ -22,3 +22,10 @@ def test_english_template_categories_are_suggested():
     assert {t["category"] for t in TEMPLATES_EN} <= set(DEFAULT_CATEGORIES_EN)
     assert len(set(DEFAULT_CATEGORIES_EN)) == len(DEFAULT_CATEGORIES_EN)
     assert len(set(DEFAULT_CATEGORIES)) == len(DEFAULT_CATEGORIES)
+
+
+def test_house_template():
+    for templates, categories, name in ((TEMPLATES, DEFAULT_CATEGORIES, "Haus"), (TEMPLATES_EN, DEFAULT_CATEGORIES_EN, "House")):
+        house = next(t for t in templates if t["name"] == name)
+        assert house["category"] == name and name in categories
+        assert house["icon"] == "mdi:home-variant" and house["frequency"] == "once"

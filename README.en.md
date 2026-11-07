@@ -39,7 +39,8 @@ All items are entered by hand. There is no bank connection, and the data stays i
 - **Monthly overview** with income, expenses and balance for 12 months. **Special entries** (anything that does not occur every month, e.g. insurance, bonus) are highlighted. Below that, **spending per category**.
 - **Overview** dashboard with key figures and a pie chart by category
 - **Search** in entries and **confirm all open bookings at once**
-- **Templates** for typical entries (salary, rent, electricity, internet, mobile, insurance, vehicle tax, savings plan, streaming, fuel, tyre change …)
+- **Templates** for typical entries (salary, rent, electricity, internet, mobile, insurance, vehicle tax, savings plan, streaming, fuel, tyre change, house …). “House” creates a one-off entry in the category House, for anything still to come for the house.
+- **Duplicate an entry**: open it and tap **Duplicate** at the bottom. The copy keeps every setting; change the name, amount and the rest, then save. Past bookings are not copied.
 - **Export and import** your own entries as a JSON file, e.g. as a backup or to move to another HA instance
 - **Incognito mode** that blurs all amounts, e.g. when showing the app to friends
 - **Contract notice reminders** as an HA event plus ready-made blueprints (English and German) for phone notifications

@@ -35,7 +35,8 @@ assert.equal(entry.type, "create_entry", JSON.stringify(entry));
 
 // -------------------------------------------------------------------- browser
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, locale: "de-DE", timezoneId: "Europe/Berlin" });
+const SHOTS = process.env.SCREENSHOTS; // optional folder: one picture per step
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: SHOTS ? 2 : 1, locale: "de-DE", timezoneId: "Europe/Berlin" });
 const errors = [];
 // Noise of the Home Assistant frontend itself (page transitions), not of the panel.
 const HA_NOISE = /Transition was skipped|Cannot parse given Error object|favicon|manifest\.json/;
@@ -71,6 +72,7 @@ async function step(name, action, expect) {
     await action();
     await page.waitForTimeout(700);
     const shown = await text();
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name.replace(/[^\wäöüÄÖÜß-]+/g, "-")}.png` });
     if (expect && !shown.includes(expect)) failed.push(`${name}: "${expect}" not shown`);
     else console.log(`ok   ${name}`);
   } catch (err) {
@@ -87,6 +89,29 @@ await step("Kalender", tab("calendar"), "GEZ");
 await step("Posten", tab("items"), "Gehalt");
 await step("Posten anlegen", click('[data-action="new-item"]'), "Betrag"); await close();
 await step("Posten bearbeiten", click('[data-action="edit-item"]'), "Betrag"); await close();
+await step("Vorlage Haus", async () => {
+  await click('[data-action="new-item"]')();
+  await panel.locator('button.template', { hasText: "Haus" }).first().click();
+}, "Haus"); await close();
+await step("Posten duplizieren", async () => {
+  await panel.locator('[data-action="edit-item"]', { hasText: "Strom" }).first().click();
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/Posten-mit-Duplizieren.png` });
+  await click('[data-action="duplicate-item"]')();
+}, "Kopie von „Strom“");
+await step("Kopie speichern", async () => {
+  await panel.locator('input[name="name"]').fill("Strom Garage");
+  await panel.locator('form[data-form="item"] button[type="submit"]').click();
+  await page.waitForTimeout(1500);
+}, "Strom Garage");
+await step("Kopie hat alle Einstellungen", async () => {
+  const items = await page.evaluate(async () => (await document.querySelector("home-assistant").hass.callWS({ type: "haushaltsbuch/state" })).items);
+  const original = items.find((i) => i.name === "Strom");
+  const copy = items.find((i) => i.name === "Strom Garage");
+  assert.ok(copy && copy.id !== original.id, "copy saved as a new entry");
+  for (const key of ["direction", "amount", "category", "icon", "start_date", "schedule", "certainty"]) {
+    assert.deepEqual(copy[key], original[key], key);
+  }
+});
 await step("Monate", tab("months"), "Monatsübersicht");
 await step("Monat aufklappen", click('[data-action="toggle-month"]'));
 await step("Übersicht", tab("dashboard"), "Lebensmittel");

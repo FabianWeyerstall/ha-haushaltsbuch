@@ -14,7 +14,7 @@ export class ItemDialog {
     // so the end date is only present while the checkbox is ticked.
     const hasEnd = d.hasEnd ?? Boolean(item.end_date);
     const dis = readOnly ? "disabled" : "";
-    const templates = !item.id
+    const templates = !item.id && !d.copyOf
       ? `<div class="templates">${this._templates()
           .map((t, idx) => `<button type="button" class="template" data-action="template" data-index="${idx}">${this._icon(t.icon, 18)}<span>${esc(t.name)}</span></button>`)
           .join("")}</div>`
@@ -24,7 +24,8 @@ export class ItemDialog {
       return `${day}.${m}.`;
     });
     return `<form data-form="item">
-      <h2>${readOnly ? esc(item.name) : item.id ? tr("Posten bearbeiten", "Edit entry") : tr("Neuer Posten", "New entry")}</h2>
+      <h2>${readOnly ? esc(item.name) : item.id ? tr("Posten bearbeiten", "Edit entry") : d.copyOf ? tr("Posten duplizieren", "Duplicate entry") : tr("Neuer Posten", "New entry")}</h2>
+      ${d.copyOf ? `<p class="hint">${tr(`Kopie von „${esc(d.copyOf)}“ mit allen Einstellungen. Passe Name, Betrag und was sonst anders ist an und speichere. Bisherige Buchungen werden nicht mitkopiert.`, `Copy of “${esc(d.copyOf)}” with all settings. Change the name, amount and whatever else differs, then save. Past bookings are not copied.`)}</p>` : ""}
       ${readOnly ? `<p class="hint">${tr(`Dieser Posten gehört ${esc(item.owner_name)} und kann nur von dort geändert werden.`, `This entry belongs to ${esc(item.owner_name)} and can only be changed by them.`)}</p>` : ""}
       ${templates}
       ${item.id && preset === "budget" && item.budget_status ? `<div class="budget-in-form">${this._renderBudgetBar(item, { list: false })}<button type="button" class="small" data-action="spending-new" data-item="${esc(item.id)}">+ ${tr("Ausgabe erfassen", "Add spending")}</button></div>` : ""}
@@ -94,7 +95,10 @@ export class ItemDialog {
       </div>
       ${this._error ? `<div class="error">${esc(this._error)}</div>` : ""}
       <div class="dialog-actions">
-        ${item.id && item.editable ? `<button type="button" class="danger" data-action="delete-item">${tr("Löschen", "Delete")}</button>` : "<span></span>"}
+        <div>
+          ${item.id && item.editable ? `<button type="button" class="danger" data-action="delete-item">${tr("Löschen", "Delete")}</button>` : ""}
+          ${item.id ? `<button type="button" class="secondary" data-action="duplicate-item">${tr("Duplizieren", "Duplicate")}</button>` : ""}
+        </div>
         <div>
           <button type="button" class="secondary" data-action="close">${readOnly ? tr("Schließen", "Close") : tr("Abbrechen", "Cancel")}</button>
           ${readOnly ? "" : `<button type="submit">${tr("Speichern", "Save")}</button>`}

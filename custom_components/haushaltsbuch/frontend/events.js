@@ -524,6 +524,22 @@ export class Events {
         }
         break;
       }
+      case "duplicate-item": {
+        // A new entry with every setting of this one (including unsaved changes in the form);
+        // bookings, spendings and remembered bank payees stay with the original.
+        const original = this._dialog.item;
+        const source = original.editable === false ? original : this._readItemForm(target.closest("form"));
+        const { id, owner, owner_name, editable, current_amount, contract_info, learned_days, budget_status, bank_keys, confirmations, overrides, spendings, ...settings } = source;
+        this._error = null;
+        this._dialog = {
+          type: "item",
+          copyOf: original.name,
+          hasEnd: Boolean(settings.end_date),
+          item: { ...settings, name: tr(`${original.name} (Kopie)`, `${original.name} (copy)`), editable: true },
+        };
+        this._render();
+        break;
+      }
       case "delete-item":
         if (confirm(tr(`„${this._dialog.item.name}“ wirklich löschen?`, `Really delete “${this._dialog.item.name}”?`))) this._run(() => this._ws("item/delete", { item_id: this._dialog.item.id }));
         break;

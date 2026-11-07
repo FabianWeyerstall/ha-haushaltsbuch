@@ -38,7 +38,8 @@ Alle Posten werden von Hand erfasst. Es gibt keine Bankanbindung, und die Daten 
 - **Monatsübersicht** mit Einnahmen, Ausgaben und Saldo für 12 Monate. **Sonderposten** (alles, was nicht jeden Monat kommt, z.B. GEZ, Versicherungen, Bonus) sind pro Monat und in Zeitleiste und Kalender gelb markiert. Darunter die **Ausgaben nach Kategorie** für die nächsten 12 Monate.
 - **Übersicht** als Dashboard mit Kennzahlen und Kreisdiagramm nach Kategorie
 - **Suche** in den Posten und **alle offenen Buchungen auf einmal bestätigen**
-- **Vorlagen** für typische Posten (GEZ, Strom, Internet, Handy, Versicherungen, Kfz-Steuer, Streaming-Abos, Gehalt, Sparen, Tanken, Räderwechsel …)
+- **Vorlagen** für typische Posten (GEZ, Strom, Internet, Handy, Versicherungen, Kfz-Steuer, Streaming-Abos, Gehalt, Sparen, Tanken, Räderwechsel, Haus …). „Haus“ legt einen einmaligen Posten in der Kategorie Haus an, für alles, was am Haus noch ansteht.
+- **Posten duplizieren**: Im geöffneten Posten unten auf **Duplizieren** tippen. Die Kopie übernimmt alle Einstellungen, Name, Betrag und den Rest passt du an und speicherst. Bisherige Buchungen werden nicht mitkopiert.
 - **Export und Import** der eigenen Posten als JSON-Datei, z.B. als Sicherung oder zum Umzug auf eine andere HA-Instanz. Beim Import wählbar: hinzufügen (Doppelte werden übersprungen) oder ersetzen
 
 ## Installation über HACS
