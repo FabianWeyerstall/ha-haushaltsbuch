@@ -20,7 +20,7 @@ export class ItemsView {
         <h3>${this._isHousehold() ? tr("Posten im Haushalt", "Household entries") : tr("Meine Posten", "My entries")}</h3>
         <button data-action="new-item">+ ${tr("Neuer Posten", "New entry")}</button>
       </div>
-      <div class="totals">
+      <div class="totals four">
         <div><div class="label">${tr("Einnahmen pro Monat", "Income per month")}</div><div class="big pos">${this._money(monthlyIn)}</div></div>
         <div><div class="label">${tr("Ausgaben pro Monat", "Expenses per month")}</div><div class="big neg">${this._money(monthlyOut)}</div>${monthlyBudgets ? `<div class="sub">${tr(`davon Budgets ${this._money(monthlyBudgets)}`, `of which budgets ${this._money(monthlyBudgets)}`)}</div>` : ""}</div>
         <div><div class="label">${tr("Ohne Budgets", "Without budgets")}</div><div class="big neg">${this._money(monthlyFixed)}</div><div class="sub">${tr("feste Kosten, kaum beeinflussbar", "fixed costs, hard to change")}</div></div>

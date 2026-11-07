@@ -36,7 +36,9 @@ assert.equal(entry.type, "create_entry", JSON.stringify(entry));
 // -------------------------------------------------------------------- browser
 const browser = await chromium.launch();
 const SHOTS = process.env.SCREENSHOTS; // optional folder: one picture per step
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: SHOTS ? 2 : 1, locale: "de-DE", timezoneId: "Europe/Berlin" });
+// VIEWPORT=390x844 runs the same steps at phone width.
+const [vw, vh] = (process.env.VIEWPORT || "1280x900").split("x").map(Number);
+const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: SHOTS ? 2 : 1, locale: "de-DE", timezoneId: "Europe/Berlin" });
 const errors = [];
 // Noise of the Home Assistant frontend itself (page transitions), not of the panel.
 const HA_NOISE = /Transition was skipped|Cannot parse given Error object|favicon|manifest\.json/;

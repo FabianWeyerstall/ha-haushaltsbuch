@@ -6,6 +6,11 @@ Ob nach einem Update ein Neustart von Home Assistant nötig ist, steht in den
 Release-Notes auf GitHub und in HACS. Der Hinweis wird beim Veröffentlichen
 automatisch aus den geänderten Dateien ermittelt (siehe `scripts/release_notes.py`).
 
+## 0.10.0rc11 – 2026-11-07
+
+### Behoben
+- Posten: Die vier Zahlen oben stehen auf dem iPhone sauber in zwei Spalten untereinander.
+
 ## 0.10.0rc10 – 2026-11-07
 
 ### Neu

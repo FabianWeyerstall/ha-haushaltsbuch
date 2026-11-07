@@ -74,6 +74,8 @@ const STYLES = `
   .balance { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
   .balance > button { margin-left: auto; }
   .totals { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 12px; }
+  /* Posten: figures in columns (two on the phone, up to four when there is room), so they line up. */
+  .totals.four { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px 24px; }
   .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .day { margin-top: 12px; }
   .day-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: var(--secondary-text-color); padding: 6px 0; border-bottom: 1px solid var(--divider-color); }
