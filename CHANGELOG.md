@@ -8,8 +8,13 @@ automatisch aus den geänderten Dateien ermittelt (siehe `scripts/release_notes.
 
 ## 0.10.0rc11 – 2026-11-07
 
+### Geändert
+- Statistik: Ist ein Gehaltsmonat eingestellt, laufen auch die Monate der Statistik von Gehalt zu Gehalt, wie in Monate und Übersicht. Die Gehaltstage werden aus den importierten Umsätzen erkannt. Das Jahr bleibt ein Kalenderjahr.
+- Unter jeder Zahl steht, woher sie kommt: Statistik = echte Umsätze aus dem Import, Monate = Plan mit allen Posten und Budgets, Übersicht = erwarteter Kontostand.
+
 ### Behoben
 - Posten: Die vier Zahlen oben stehen auf dem iPhone sauber in zwei Spalten untereinander.
+- Statistik: keine Sparquote mehr, wenn mehr ausgegeben als eingenommen wurde (vorher z.B. „-7352 %“).
 
 ## 0.10.0rc10 – 2026-11-07
 

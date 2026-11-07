@@ -334,7 +334,9 @@ export class Events {
         } else if (!this._statsMonth) {
           const inYear = rows.filter((r) => r[0].startsWith(curYear));
           this._statsYear = curYear;
-          this._statsMonth = (inYear.length ? inYear[inYear.length - 1][0] : latest).slice(0, 7);
+          const monthOf = this._statsMonthKey || ((d) => d.slice(0, 7));
+          this._statsMonth = monthOf(inYear.length ? inYear[inYear.length - 1][0] : latest);
+          this._statsYear = this._statsMonth.slice(0, 4);
         }
         this._statsOpen = null;
         this._statsPick = null;

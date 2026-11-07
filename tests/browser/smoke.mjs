@@ -140,6 +140,19 @@ await close();
 await step("Statistik mit Umsätzen", tab("stats"), "Gespeichert sind 316 Umsätze");
 await step("Statistik Jahr", click('[data-action="stats-period"] >> nth=1'));
 await step("Statistik Auswertungen", click('[data-action="stats-tab"] >> nth=-1'));
+await step("Statistik im Gehaltsmonat", async () => {
+  await page.evaluate(async () => {
+    const hass = document.querySelector("home-assistant").hass;
+    const st = await hass.callWS({ type: "haushaltsbuch/state" });
+    await hass.callWS({ type: "haushaltsbuch/settings", settings: { salary_item_id: st.items.find((i) => i.name === "Gehalt").id } });
+  });
+  await page.reload();
+  await panel.waitFor();
+  await page.waitForTimeout(2000);
+  await tab("stats")();
+  await click('[data-action="stats-tab"][data-tab="numbers"]')();
+  await click('[data-action="stats-period"][data-period="month"]')();
+}, "29.10. BIS 04.11."); // the label is shown in capitals
 await step("Zeitleiste danach", tab("timeline"), "Strom");
 
 await browser.close();

@@ -41,6 +41,37 @@ export class StatsView {
     return this._ledgerClean;
   }
 
+  /**
+   * Which month a transaction belongs to. With a salary month (payday to payday,
+   * see _salaryItem) the months follow the paydays found in the transactions,
+   * like the rest of the app: a payday after the 15th starts the next month.
+   * Without one, or before the first payday found, it is the calendar month.
+   */
+  _statsMonthOf(rows) {
+    const calendar = (d) => d.slice(0, 7);
+    const salary = this._salaryItem();
+    if (!salary) return { monthOf: calendar, startOf: () => null };
+    const h = this._bankHistory?.[salary.id] || {};
+    const booked = new Set((h.booked || []).map(([d, a]) => `${d}|${Number(a).toFixed(2)}`));
+    const keys = new Set((h.bank_keys || []).filter((k) => k.startsWith("n:")));
+    const least = Math.abs(salary.current_amount ?? salary.amount ?? 0) * 0.5;
+    const paydays = [...new Set(rows
+      .filter((r) => r[1] > 0 && r[1] >= least && (booked.has(`${r[0]}|${r[1].toFixed(2)}`) || keys.has(`n:${nameKey(r[2] || "")}|income`)))
+      .map((r) => r[0]))].sort();
+    if (!paydays.length) return { monthOf: calendar, startOf: () => null };
+    const keyOf = (p) => (Number(p.slice(8)) > 15 ? iso(new Date(Number(p.slice(0, 4)), Number(p.slice(5, 7)), 1)).slice(0, 7) : p.slice(0, 7));
+    const starts = new Map();
+    for (const p of paydays) if (!starts.has(keyOf(p))) starts.set(keyOf(p), p);
+    const monthOf = (d) => {
+      let lo = 0, hi = paydays.length - 1, found = -1;
+      while (lo <= hi) { const mid = (lo + hi) >> 1; if (paydays[mid] <= d) { found = mid; lo = mid + 1; } else hi = mid - 1; }
+      // Before the first payday, or long after the last one: calendar month.
+      if (found < 0 || daysBetween(paydays[found], d) > 40) return calendar(d);
+      return keyOf(paydays[found]);
+    };
+    return { monthOf, startOf: (key) => starts.get(key) || null };
+  }
+
   _renderStats() {
     const clean = this._cleanLedger();
     const rows = clean.rows;
@@ -51,19 +82,22 @@ export class StatsView {
     const account = accounts.includes(this._statsAccount) ? this._statsAccount : "all";
     const mine = account === "all" ? rows : rows.filter((r) => r[5] === account);
     const years = [...new Set(mine.map((r) => r[0].slice(0, 4)))].sort();
-    const monthsAll = [...new Set(mine.map((r) => r[0].slice(0, 7)))].sort();
+    const { monthOf, startOf } = this._statsMonthOf(mine);
+    this._statsMonthKey = monthOf;
+    const mk = (r) => monthOf(r[0]);
+    const monthsAll = [...new Set(mine.map(mk))].sort();
     const year = this._statsYear === "all" || years.includes(this._statsYear) ? this._statsYear : years[years.length - 1];
     const all = year === "all";
     const lastDate = mine[mine.length - 1][0];
     const inYear = (r, y) => r[0].startsWith(y);
-    const month = !all && this._statsMonth?.startsWith(`${year}-`) ? this._statsMonth : null;
+    const month = !all && monthsAll.includes(this._statsMonth) && this._statsMonth.slice(0, 4) === year ? this._statsMonth : null;
     const mode = all ? "all" : month ? "month" : "year";
     // A running year is compared with the same part of the year before.
-    const running = mode === "year" ? year === lastDate.slice(0, 4) : mode === "month" && month === lastDate.slice(0, 7);
+    const running = mode === "year" ? year === lastDate.slice(0, 4) : mode === "month" && month === monthOf(lastDate);
     const cutoff = running ? lastDate.slice(5) : "12-31";
     const prevYear = String(Number(year) - 1);
-    const period = all ? mine : mine.filter((r) => (month ? r[0].startsWith(month) : inYear(r, year)));
-    const before = all || !years.includes(prevYear) ? null : month ? mine.filter((r) => r[0].startsWith(`${prevYear}-${month.slice(5)}`) && r[0].slice(5) <= cutoff) : mine.filter((r) => inYear(r, prevYear) && r[0].slice(5) <= cutoff);
+    const period = all ? mine : mine.filter((r) => (month ? mk(r) === month : inYear(r, year)));
+    const before = all || !years.includes(prevYear) ? null : month ? mine.filter((r) => mk(r) === `${prevYear}-${month.slice(5)}` && (!running || r[0] <= `${prevYear}-${lastDate.slice(5)}`)) : mine.filter((r) => inYear(r, prevYear) && r[0].slice(5) <= cutoff);
     const sums = (list) => list.reduce((s, r) => (r[1] > 0 ? (s.income += r[1]) : (s.expense -= r[1]), s), { income: 0, expense: 0 });
     const now = sums(period);
     const was = before && before.length ? sums(before) : null;
@@ -123,7 +157,9 @@ export class StatsView {
     if (insights) return top + `<div class="st-grid single">${insightCards}</div>` + manage;
 
     // Hero: what is left, with income and spending beside it.
-    const heroLabel = mode === "month" ? (running ? tr(`Übrig im ${monthLabel(month)} bis ${shortDay(lastDate)}`, `Left over in ${monthLabel(month)} until ${shortDay(lastDate)}`) : tr(`Übrig im ${monthLabel(month)}`, `Left over in ${monthLabel(month)}`))
+    const monthStart = mode === "month" ? startOf(month) : null;
+    const monthText = mode !== "month" ? "" : running ? tr(`Übrig im ${monthLabel(month)} bis ${shortDay(lastDate)}`, `Left over in ${monthLabel(month)} until ${shortDay(lastDate)}`) : tr(`Übrig im ${monthLabel(month)}`, `Left over in ${monthLabel(month)}`);
+    const heroLabel = mode === "month" ? (monthStart ? (running ? tr(`Übrig im ${monthLabel(month)} · ${shortDay(monthStart)} bis ${shortDay(lastDate)}`, `Left over in ${monthLabel(month)} · ${shortDay(monthStart)} to ${shortDay(lastDate)}`) : `${monthText} · ${tr("ab", "from")} ${shortDay(monthStart)}`) : monthText)
       : mode === "year" ? (cutoff !== "12-31" ? tr(`Übrig ${year} bis ${shortDay(lastDate)}`, `Left over ${year} until ${shortDay(lastDate)}`) : tr(`Übrig ${year}`, `Left over ${year}`))
       : tr(`Übrig pro Jahr, Ø seit ${years[0]}`, `Left over per year, avg since ${years[0]}`);
     const vsLabel = mode === "month" ? `${monthName(Number(month.slice(5)) - 1)} ${prevYear}` : prevYear;
@@ -131,7 +167,7 @@ export class StatsView {
     const share = now.income ? Math.round((rest / now.income) * 100) : null;
     // Small trend lines: the buckets around the chosen period.
     const sparkKeys = mode === "all" ? years : mode === "year" ? monthsAll.filter((m) => m.startsWith(year)) : monthsAll.slice(Math.max(0, monthsAll.indexOf(month) - 11), monthsAll.indexOf(month) + 1);
-    const sparkSums = sparkKeys.map((k) => sums(mine.filter((r) => r[0].startsWith(k))));
+    const sparkSums = sparkKeys.map((k) => sums(mine.filter((r) => (k.length === 7 ? mk(r) === k : r[0].startsWith(k)))));
     const spark = (values, color) => {
       if (values.length < 2) return "";
       const lo = Math.min(...values);
@@ -144,9 +180,10 @@ export class StatsView {
         <div class="st-label">${esc(heroLabel)}</div>
         <div class="st-big-row"><span class="st-big ${rest < 0 ? "neg" : ""}">${this._money(rest / perYear)}</span>
           ${restDiff !== null && Math.abs(restDiff) >= 1 ? `<span class="badge ${restDiff > 0 ? "good" : "bad"}">${restDiff > 0 ? "▲" : "▼"} ${this._moneyPlain(Math.abs(restDiff))} ${tr(`ggü. ${vsLabel}`, `vs ${vsLabel}`)}</span>` : ""}</div>
+        <div class="hint st-source">${tr(`Echte Umsätze aus deinen CSV-Importen, Stand ${shortDay(lastDate)}`, `Real transactions from your CSV imports, as of ${shortDay(lastDate)}.`)}${monthStart ? tr(" Der Monat läuft wie überall von Gehalt zu Gehalt.", " As everywhere, the month runs from payday to payday.") : ""}</div>
         <div class="hint">${share === null ? "" : rest >= 0 ? tr(`Du hast ${share} % deines Einkommens behalten.`, `You kept ${share} % of your income.`) : tr(`Du hast ${this._moneyPlain(-rest / perYear)} mehr ausgegeben als eingenommen.`, `You spent ${this._moneyPlain(-rest / perYear)} more than you earned.`)}</div>
       </div>
-      ${share !== null ? `<div class="st-rate"><div class="st-rate-bar"><span style="width:${Math.max(0, Math.min(100, share))}%"></span></div><span class="hint">${tr(`Sparquote ${share} %`, `Savings rate ${share} %`)}</span></div>` : ""}
+      ${share !== null && rest >= 0 ? `<div class="st-rate"><div class="st-rate-bar"><span style="width:${Math.max(0, Math.min(100, share))}%"></span></div><span class="hint">${tr(`Sparquote ${share} %`, `Savings rate ${share} %`)}</span></div>` : ""}
       <div class="st-kpis">
         <div class="st-kpi"><span class="st-label">${tr("Eingenommen", "Income")}</span><span class="st-kpi-v">${this._money(now.income / perYear)}</span>${was ? badge(pctOf(now.income, was.income), true) : ""}${spark(sparkSums.map((s) => s.income), "var(--success-color, #1baf7a)")}</div>
         <div class="st-kpi"><span class="st-label">${tr("Ausgegeben", "Spent")}</span><span class="st-kpi-v">${this._money(now.expense / perYear)}</span>${was ? badge(pctOf(now.expense, was.expense), false) : ""}${spark(sparkSums.map((s) => s.expense), "var(--error-color, #e34948)")}</div>
@@ -155,7 +192,7 @@ export class StatsView {
 
     // History: years, or the months of the year.
     const buckets = all ? years.map((y) => [y, y]) : Array.from({ length: 12 }, (_, i) => [`${year}-${String(i + 1).padStart(2, "0")}`, monthName(i, "short").slice(0, 3)]);
-    const bucketSums = buckets.map(([key, name]) => ({ key, name, ...sums(mine.filter((r) => r[0].startsWith(key))) }));
+    const bucketSums = buckets.map(([key, name]) => ({ key, name, ...sums(mine.filter((r) => (all ? r[0].startsWith(key) : mk(r) === key))) }));
     const peak = Math.max(1, ...bucketSums.map((b) => Math.max(b.income, b.expense)));
     const magnitude = Math.pow(10, Math.floor(Math.log10(peak / 3)));
     const step = [1, 2, 2.5, 5, 10].map((f) => f * magnitude).find((s) => s * 3 >= peak) || magnitude * 10;
