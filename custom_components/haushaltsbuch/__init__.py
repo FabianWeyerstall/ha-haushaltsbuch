@@ -12,7 +12,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_change
@@ -33,12 +33,12 @@ from .const import (
     SERVICE_CONTRACT_REMINDERS,
     SIGNAL_UPDATED,
     STORAGE_KEY,
-    STORAGE_VERSION,
     VERSION,
 )
 from .engine import budget_status, contract_reminders, period_finder
 from . import backups
 from .ledger import Ledger
+from .migrations import BOOK_VERSION, LEDGER_VERSION, NewerDataError, migrate_book, migrate_ledger
 from .store import Book, ValidationError
 from .websocket_api import async_register_websocket_commands
 
@@ -47,21 +47,40 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 STATIC_REGISTERED = f"{DOMAIN}_static_registered"
 
 
+class VersionedStore(Store):
+    """A Store that upgrades an older file layout with the steps in migrations.py."""
+
+    def __init__(self, hass: HomeAssistant, key: str, version: tuple[int, int], migrate, before_upgrade=None) -> None:
+        super().__init__(hass, version[0], key, minor_version=version[1])
+        self._version = version
+        self._migrate = migrate
+        self._before_upgrade = before_upgrade
+
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
+        found = (old_major_version, old_minor_version)
+        data = self._migrate(found, old_data)
+        if found < self._version and self._before_upgrade:
+            # Home Assistant overwrites the file right after this; keep the old state.
+            await self._before_upgrade(found, old_data)
+        return data
+
+
 class HaushaltsbuchData:
     """Runtime holder for the book and its persistence."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self.entry = entry
-        self.store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self.store: Store = VersionedStore(hass, STORAGE_KEY, BOOK_VERSION, migrate_book, self._backup_before_upgrade)
         self.book = Book()
-        self.ledger_store: Store = Store(hass, 1, f"{DOMAIN}.ledger")
+        self.ledger_store: Store = VersionedStore(hass, f"{DOMAIN}.ledger", LEDGER_VERSION, migrate_ledger)
         self.ledger = Ledger()
         self._entity_households: frozenset[str] = frozenset()
 
     async def async_load(self) -> None:
-        self.book = Book(await self.store.async_load())
+        # Ledger first, so a backup before a book upgrade contains it.
         self.ledger = Ledger(await self.ledger_store.async_load())
+        self.book = Book(await self.store.async_load())
         self._entity_households = self.entity_households()
 
     def entity_households(self) -> frozenset[str]:
@@ -76,12 +95,20 @@ class HaushaltsbuchData:
             backups.write, backups.backup_dir(self.hass), document
         )
 
+    async def _backup_before_upgrade(self, found: tuple[int, int], old_book: dict) -> None:
+        """Backup of the book as it was before an upgrade of its layout."""
+        document = backups.make_document(Book(), self.ledger, "before_update")
+        document["book"] = copy.deepcopy(old_book)
+        document["book_version"] = list(found)
+        await self.hass.async_add_executor_job(backups.write, backups.backup_dir(self.hass), document)
+
     async def async_restore(self, document: dict) -> None:
         """Replace all data with a backup; the current state is saved first."""
         backups.check_document(document)
         await self.async_backup("before_restore")
-        self.book = Book(copy.deepcopy(document["book"]))
-        self.ledger = Ledger(copy.deepcopy(document.get("ledger") or {"users": {}}))
+        book, ledger = backups.upgrade(document)
+        self.book = Book(book)
+        self.ledger = Ledger(ledger)
         await self.async_ledger_changed()
         await self.async_changed()
 
@@ -190,7 +217,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = HaushaltsbuchData(hass, entry)
-    await data.async_load()
+    try:
+        await data.async_load()
+    except NewerDataError as err:
+        # Going back to an older release after a layout change: refuse instead of misreading.
+        raise ConfigEntryError(str(err)) from err
     hass.data[DOMAIN] = data
     entry.runtime_data = data
 

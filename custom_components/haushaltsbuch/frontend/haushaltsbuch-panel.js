@@ -3012,6 +3012,7 @@ class HaushaltsbuchPanel extends HTMLElement {
       manual: tr("von Hand", "manual"),
       csv_import: tr("vor CSV-Import", "before CSV import"),
       before_restore: tr("vor Wiederherstellen", "before restore"),
+      before_update: tr("vor Update der Daten", "before data update"),
       upload: tr("hochgeladene Datei", "uploaded file"),
     };
     const list = this._backups?.backups || [];

@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 DOMAIN = "haushaltsbuch"
-VERSION = "0.10.0rc4"
+VERSION = "0.10.0rc5"
 
 STORAGE_KEY = f"{DOMAIN}.data"
-STORAGE_VERSION = 1
 
 PANEL_URL_PATH = "haushaltsbuch"
 PANEL_WEBCOMPONENT = "haushaltsbuch-panel"

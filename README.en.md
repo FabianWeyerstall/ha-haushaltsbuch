@@ -307,7 +307,7 @@ Tab **Entries** → **Export** saves your own entries as a JSON file. **Import**
 
 ### Backups and restore
 
-Tab **Household** → **Backups** (HA admins only): **Back up now** saves everything, i.e. entries, households, balances and the statistics transactions, for all users. A backup is also made automatically before every CSV import and every restore. The last 30 are kept as JSON in `/config/haushaltsbuch_backups`, so they are part of normal Home Assistant backups too. Each backup can be **downloaded** or **restored**, and **Restore from file …** takes a downloaded one.
+Tab **Household** → **Backups** (HA admins only): **Back up now** saves everything, i.e. entries, households, balances and the statistics transactions, for all users. A backup is also made automatically before every CSV import, every restore and whenever an update changes the layout of the stored data. Older backups can still be restored after an update. The last 30 are kept as JSON in `/config/haushaltsbuch_backups`, so they are part of normal Home Assistant backups too. Each backup can be **downloaded** or **restored**, and **Restore from file …** takes a downloaded one.
 
 ## Importing transactions from your banking app (CSV)
 

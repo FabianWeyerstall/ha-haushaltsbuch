@@ -317,7 +317,7 @@ Tab **Posten** → **Exportieren** speichert deine eigenen Posten als JSON-Datei
 
 ### Sicherungen und zurückspielen
 
-Tab **Haushalt** → **Sicherungen** (nur für HA-Admins): **Jetzt sichern** speichert alles, also Posten, Haushalte, Kontostände und die Umsätze der Statistik, für alle Nutzer. Automatisch gesichert wird außerdem vor jedem CSV-Import und vor jedem Zurückspielen. Die letzten 30 Sicherungen liegen als JSON in `/config/haushaltsbuch_backups` und sind damit auch in den normalen Home-Assistant-Backups enthalten. Jede Sicherung lässt sich **herunterladen** oder **zurückspielen**, und mit **Sicherungsdatei zurückspielen …** auch eine heruntergeladene Datei.
+Tab **Haushalt** → **Sicherungen** (nur für HA-Admins): **Jetzt sichern** speichert alles, also Posten, Haushalte, Kontostände und die Umsätze der Statistik, für alle Nutzer. Automatisch gesichert wird außerdem vor jedem CSV-Import, vor jedem Zurückspielen und wenn ein Update das Format der gespeicherten Daten ändert. Ältere Sicherungen lassen sich auch nach einem Update zurückspielen. Die letzten 30 Sicherungen liegen als JSON in `/config/haushaltsbuch_backups` und sind damit auch in den normalen Home-Assistant-Backups enthalten. Jede Sicherung lässt sich **herunterladen** oder **zurückspielen**, und mit **Sicherungsdatei zurückspielen …** auch eine heruntergeladene Datei.
 
 ## Umsätze aus der Banking-App importieren (CSV)
 
