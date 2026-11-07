@@ -48,7 +48,13 @@ await page.goto(`${HA}/auth/providers`);
 await page.evaluate(([t, ha]) => localStorage.setItem("hassTokens", JSON.stringify({ ...t, hassUrl: ha, clientId: `${ha}/`, expires: Date.now() + 1800e3 })), [tokens, HA]);
 await page.goto(`${HA}/haushaltsbuch`);
 const panel = page.locator("haushaltsbuch-panel");
-await panel.waitFor({ timeout: 60000 });
+try {
+  await panel.waitFor({ timeout: 60000 });
+} catch (err) {
+  console.error(`Panel did not appear at ${page.url()}\n${errors.join("\n")}\n${(await page.locator("body").innerText()).slice(0, 500)}`);
+  if (process.env.SCREENSHOTS) await page.screenshot({ path: `${process.env.SCREENSHOTS}/no-panel.png` });
+  throw err;
+}
 
 await page.evaluate(async () => {
   const hass = document.querySelector("home-assistant").hass;

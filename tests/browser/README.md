@@ -11,6 +11,7 @@ Läuft bei jedem Pull Request (GitHub Actions, Job `browser`). Lokal:
 
 ```bash
 pip install -r requirements_test.txt
+python tests/browser/ha_requirements.py > /tmp/ha-req.txt && pip install -r /tmp/ha-req.txt
 npm install --no-save playwright && npx playwright install chromium
 tests/browser/run.sh          # anderer Port: HA_PORT=8124 tests/browser/run.sh
 ```

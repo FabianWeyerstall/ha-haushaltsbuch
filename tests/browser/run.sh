@@ -8,8 +8,9 @@ CONFIG="$(mktemp -d)"
 PORT="${HA_PORT:-8123}"
 mkdir -p "$CONFIG/custom_components"
 ln -s "$REPO/custom_components/haushaltsbuch" "$CONFIG/custom_components/haushaltsbuch"
+# A normal setup: default_config (its packages come from tests/browser/ha_requirements.py).
 printf 'default_config:\nhttp:\n  server_port: %s\n' "$PORT" > "$CONFIG/configuration.yaml"
-hass -c "$CONFIG" > "$CONFIG/hass.log" 2>&1 &
+hass -c "$CONFIG" --skip-pip > "$CONFIG/hass.log" 2>&1 &
 HASS=$!
 trap 'kill $HASS 2>/dev/null || true; wait $HASS 2>/dev/null || true' EXIT
 for _ in $(seq 1 120); do

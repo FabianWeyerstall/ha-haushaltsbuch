@@ -39,6 +39,8 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements_test.txt
+      - name: Packages of a normal Home Assistant (default_config)
+        run: python tests/browser/ha_requirements.py > /tmp/ha-requirements.txt && pip install -r /tmp/ha-requirements.txt
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
