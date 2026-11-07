@@ -356,7 +356,7 @@ Das Auge oben in der Leiste macht alle Beträge und Kontostände unscharf, auch 
 - **Unregelmäßige Ausgaben** wie Lebensmittel oder Freizeit am besten als **Budget pro Monat** erfassen statt als viele einzelne Posten, und die echten Ausgaben darin eintragen.
 - **Privatsphäre:** Private Posten sieht nur ihr Besitzer, auch HA-Admins nicht. Kalender und Sensoren eines Haushalts sind dagegen für alle HA-Nutzer sichtbar und deshalb standardmäßig aus.
 - **Sprache:** Die Oberfläche richtet sich nach der Sprache in deinem HA-Profil: Deutsch bei Deutsch, sonst Englisch. Für englische Push-Nachrichten gibt es den Blueprint `contract_reminder.yaml`.
-- **Updates:** Betrifft ein Update nur die Oberfläche, reicht es, die Seite neu zu laden (in der iPhone-App eventuell den Frontend-Cache leeren). Ändert sich die Berechnung im Hintergrund, braucht Home Assistant einen Neustart. HACS weist dann darauf hin.
+- **Updates:** Betrifft ein Update nur die Oberfläche, reicht es, die Seite neu zu laden (in der iPhone-App eventuell den Frontend-Cache leeren). Ändert sich die Berechnung im Hintergrund, braucht Home Assistant einen Neustart. Was zutrifft, steht in den Release-Notes jeder Version (in HACS und auf GitHub). Alle Änderungen stehen im [CHANGELOG](CHANGELOG.md).
 
 ## Entwicklung
 
@@ -365,8 +365,16 @@ pip install -r requirements_test.txt
 pytest
 ```
 
-Die Berechnung (`engine.py`) und die Zugriffsregeln (`store.py`) haben keine Abhängigkeit zu Home Assistant. Das Panel ist eine einzelne JavaScript-Datei ohne Build-Schritt (`frontend/haushaltsbuch-panel.js`).
+Die Berechnung (`engine.py`) und die Zugriffsregeln (`store.py`) haben keine Abhängigkeit zu Home Assistant. Das Panel besteht aus JavaScript-Modulen ohne Build-Schritt (`frontend/`, Übersicht im Kopf von `haushaltsbuch-panel.js`). Tests fürs Panel: `tests/panel` und `tests/browser`.
 
 ## Neue Version veröffentlichen
 
-Version in `custom_components/haushaltsbuch/manifest.json` und `const.py` erhöhen und nach `main` mergen. Der Workflow „Release“ legt dann automatisch das GitHub-Release `vX.Y.Z` an, und HACS bietet das Update an. Eine Version wie `0.10.0b1` wird als Vorabversion (Beta) veröffentlicht. HACS zeigt sie nur, wenn beim Haushaltsbuch „Beta-Versionen anzeigen“ eingeschaltet ist. Eine Beta lässt sich auch von einem Branch aus veröffentlichen: Workflow „Release“ manuell für diesen Branch starten.
+Lieber oft kleine Versionen als selten große: eine Version pro Funktion oder Fehlerbehebung, damit sich ein Problem leicht einer Änderung zuordnen lässt.
+
+1. Version in `custom_components/haushaltsbuch/manifest.json` und `const.py` erhöhen.
+2. In `CHANGELOG.md` oben einen Abschnitt `## <Version> – <Datum>` mit den Änderungen anlegen (Neu / Geändert / Behoben). Die Tests prüfen, dass es ihn gibt.
+3. Nach `main` mergen.
+
+Der Workflow „Release“ legt dann automatisch das GitHub-Release `vX.Y.Z` an, und HACS bietet das Update an. Eine Version wie `0.10.0b1` wird als Vorabversion (Beta) veröffentlicht. HACS zeigt sie nur, wenn beim Haushaltsbuch „Beta-Versionen anzeigen“ eingeschaltet ist. Eine Beta lässt sich auch von einem Branch aus veröffentlichen: Workflow „Release“ manuell für diesen Branch starten.
+
+Den Neustart-Hinweis schreibt niemand von Hand: `scripts/release_notes.py` vergleicht mit der vorigen Version und schreibt „neu starten“, sobald sich Python-Code oder Übersetzungen geändert haben, sonst „Seite neu laden“. Ausprobieren mit `python scripts/release_notes.py <Version>`.

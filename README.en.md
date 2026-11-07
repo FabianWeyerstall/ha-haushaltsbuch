@@ -345,7 +345,7 @@ The eye icon in the top bar blurs all amounts and balances, including in forms. 
 - **"Skipped" means it does not happen at all.** For "arrives later", leave it open or fix a date.
 - **Irregular spending** such as groceries works best as a **monthly budget**, with the real spendings entered in it.
 - **Privacy:** private entries are only visible to their owner. Household calendar and sensors are visible to all HA users and therefore off by default.
-- **Updates:** if an update only changes the user interface, reloading the page is enough (the companion app may need its frontend cache cleared). If the background logic changes, Home Assistant needs a restart; HACS will tell you.
+- **Updates:** if an update only changes the user interface, reloading the page is enough (the companion app may need its frontend cache cleared). If the background logic changes, Home Assistant needs a restart. The release notes of each version (in HACS and on GitHub) say which applies. All changes are listed in the [CHANGELOG](CHANGELOG.md) (German).
 
 ## Development
 
@@ -354,8 +354,16 @@ pip install -r requirements_test.txt
 pytest
 ```
 
-The calculation (`engine.py`) and access rules (`store.py`) have no dependency on Home Assistant. The panel is a single JavaScript file without a build step (`frontend/haushaltsbuch-panel.js`).
+The calculation (`engine.py`) and access rules (`store.py`) have no dependency on Home Assistant. The panel consists of JavaScript modules without a build step (`frontend/`, overview at the top of `haushaltsbuch-panel.js`). Panel tests: `tests/panel` and `tests/browser`.
 
 ## Releasing
 
-Bump the version in `custom_components/haushaltsbuch/manifest.json` and `const.py` and merge into `main`. The *Release* workflow then creates the GitHub release `vX.Y.Z` automatically and HACS offers the update.
+Prefer frequent small versions over rare big ones: one version per feature or fix.
+
+1. Bump the version in `custom_components/haushaltsbuch/manifest.json` and `const.py`.
+2. Add a section `## <version> – <date>` at the top of `CHANGELOG.md` (a test checks it exists).
+3. Merge into `main`.
+
+The *Release* workflow then creates the GitHub release `vX.Y.Z` automatically and HACS offers the update.
+
+The restart hint is not written by hand: `scripts/release_notes.py` compares with the previous version and asks for a restart when Python code or translations changed, otherwise for a page reload.
