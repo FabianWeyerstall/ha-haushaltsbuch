@@ -11,6 +11,9 @@ export class ItemsView {
     for (const item of items) (groups[item.category] ||= []).push(item);
     const monthlyIn = items.filter((i) => i.direction === "income").reduce((a, i) => a + monthlyEquivalent(i), 0);
     const monthlyOut = items.filter((i) => i.direction === "expense").reduce((a, i) => a + monthlyEquivalent(i), 0);
+    // Budgets (groceries, fuel …) are where saving is possible; everything else is fixed.
+    const monthlyBudgets = items.filter((i) => i.direction === "expense" && i.schedule?.frequency === "budget").reduce((a, i) => a + monthlyEquivalent(i), 0);
+    const monthlyFixed = monthlyOut - monthlyBudgets;
     const households = Object.fromEntries(this._state.households.map((h) => [h.id, h.name]));
     return `<div class="card">
       <div class="row-between">
@@ -19,10 +22,11 @@ export class ItemsView {
       </div>
       <div class="totals">
         <div><div class="label">${tr("Einnahmen pro Monat", "Income per month")}</div><div class="big pos">${this._money(monthlyIn)}</div></div>
-        <div><div class="label">${tr("Ausgaben pro Monat", "Expenses per month")}</div><div class="big neg">${this._money(monthlyOut)}</div></div>
+        <div><div class="label">${tr("Ausgaben pro Monat", "Expenses per month")}</div><div class="big neg">${this._money(monthlyOut)}</div>${monthlyBudgets ? `<div class="sub">${tr(`davon Budgets ${this._money(monthlyBudgets)}`, `of which budgets ${this._money(monthlyBudgets)}`)}</div>` : ""}</div>
+        <div><div class="label">${tr("Ohne Budgets", "Without budgets")}</div><div class="big neg">${this._money(monthlyFixed)}</div><div class="sub">${tr("feste Kosten, kaum beeinflussbar", "fixed costs, hard to change")}</div></div>
         <div><div class="label">${tr("Ausgaben pro Jahr", "Expenses per year")}</div><div class="big">${this._money(monthlyOut * 12)}</div></div>
       </div>
-      <p class="hint">${tr("Wiederkehrende Posten auf einen Monat umgerechnet, einmalige Posten zählen hier nicht mit.", "Recurring entries converted to one month; one-off entries are not included here.")}</p>
+      <p class="hint">${tr("Wiederkehrende Posten auf einen Monat umgerechnet, einmalige Posten zählen hier nicht mit. „Ohne Budgets“ sind die festen Kosten; bei den Budgets (z. B. Lebensmittel, Tanken) kannst du am ehesten sparen.", "Recurring entries converted to one month; one-off entries are not included here. “Without budgets” are the fixed costs; budgets (e.g. groceries, fuel) are where saving is easiest.")}</p>
       ${this._isHousehold() ? "" : `<p class="hint">${tr("Importieren nimmt eine Export-Datei des Haushaltsbuchs oder eine CSV mit Umsätzen aus deiner Banking-App. Aus der CSV schlägt das Haushaltsbuch wiederkehrende Abbuchungen vor.", "Import takes a Household Budget export file or a CSV of transactions from your banking app. From a CSV, recurring payments are suggested.")}</p>`}
       ${this._isHousehold() ? "" : `<div class="row-actions">
         <button class="secondary small" data-action="export">${tr("Exportieren", "Export")}</button>

@@ -92,7 +92,7 @@ const close = async () => { const c = panel.locator('[data-action="close"]').fir
 await step("Zeitleiste", tab("timeline"), "Strom");
 await step("Kontostand bearbeiten", click('[data-action="edit-balance"]'), "Kontostand"); await close();
 await step("Kalender", tab("calendar"), "GEZ");
-await step("Posten", tab("items"), "Gehalt");
+await step("Posten", tab("items"), "Ohne Budgets");
 await step("Posten anlegen", click('[data-action="new-item"]'), "Betrag"); await close();
 await step("Posten bearbeiten", click('[data-action="edit-item"]'), "Betrag"); await close();
 await step("Vorlage Haus", async () => {
