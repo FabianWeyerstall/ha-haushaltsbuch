@@ -72,6 +72,52 @@ export class StatsView {
     return { monthOf, startOf: (key) => starts.get(key) || null };
   }
 
+  /**
+   * The category a transaction counts under in the statistics, newest wish first:
+   * a category picked by hand ("only a category"), then the category of the entry
+   * or budget it is assigned to (sub category = the entry), then the bank's own.
+   * Returns { main, sub, item, manual }.
+   */
+  _statsCategories() {
+    const items = this._state.items;
+    const history = this._bankHistory || {};
+    const manual = this._state.user.settings?.stats_categories || {};
+    const cacheKey = [this._ledger?.rows, items, history, manual];
+    if (this._statsCatCache && this._statsCatCache.key.every((k, i) => k === cacheKey[i])) return this._statsCatCache.of;
+    const byId = new Map(items.map((i) => [i.id, i]));
+    const byBooking = new Map();
+    const byPayee = new Map();
+    for (const [id, h] of Object.entries(history)) {
+      const item = byId.get(id);
+      if (!item) continue;
+      for (const [date, amount] of [...(h.spendings || []), ...(h.booked || [])]) if (amount != null) byBooking.set(`${date}|${Number(amount).toFixed(2)}`, item);
+      for (const k of h.bank_keys || []) if (k.startsWith("n:")) byPayee.set(k, item);
+    }
+    const none = tr("Ohne Kategorie", "Uncategorised");
+    const cache = new WeakMap();
+    const of = (r) => {
+      if (cache.has(r)) return cache.get(r);
+      const payee = `n:${nameKey(r[2] || "")}|${r[1] < 0 ? "expense" : "income"}`;
+      const own = manual[this._statsRowKey(r)] || manual[payee];
+      const bank = r[3] || r[4] || "";
+      let result;
+      if (own) result = { main: own, sub: r[4] && r[4] !== own ? r[4] : bank && bank !== own ? bank : own, manual: true };
+      else {
+        const item = r.cardBill ? null : byBooking.get(`${r[0]}|${Math.abs(r[1]).toFixed(2)}`) || byPayee.get(payee);
+        result = item?.category ? { main: item.category, sub: item.name, item } : { main: bank || none, sub: r[4] || bank || none };
+      }
+      cache.set(r, result);
+      return result;
+    };
+    this._statsCatCache = { key: cacheKey, of };
+    return of;
+  }
+
+  /** Key of one single transaction for a category picked by hand. */
+  _statsRowKey(r) {
+    return `r:${r[0]}|${Math.abs(r[1]).toFixed(2)}|${nameKey(r[2] || "")}`;
+  }
+
   _renderStats() {
     const clean = this._cleanLedger();
     const rows = clean.rows;
@@ -122,9 +168,12 @@ export class StatsView {
     }
     const keyOwner = new Map();
     for (const [id, h] of Object.entries(this._bankHistory || {})) for (const k of h.bank_keys || []) if (itemNames[id] && k.startsWith("n:")) keyOwner.set(k, itemNames[id]);
+    const catOf = this._statsCategories();
     const assignChip = (r) => {
       const name = assignedTo.get(`${r[0]}|${Math.abs(r[1]).toFixed(2)}`) || keyOwner.get(`n:${nameKey(r[2] || "")}|${r[1] < 0 ? "expense" : "income"}`);
-      return `<button class="assign-chip ${name ? "set" : ""}" data-action="ledger-assign" data-row="${indexOf.get(r)}" data-current="${esc(name || "")}">${name ? `→ ${esc(name)}` : tr("zuordnen", "assign")}</button>`;
+      const c = catOf(r);
+      const label = c.manual ? `→ ${esc(c.main)}` : name ? `→ ${esc(name)}` : tr("zuordnen", "assign");
+      return `<button class="assign-chip ${name || c.manual ? "set" : ""}" data-action="ledger-assign" data-row="${indexOf.get(r)}" data-current="${esc(name || "")}">${label}</button>`;
     };
 
     // Top: period, navigation, account, tabs.
@@ -242,11 +291,11 @@ export class StatsView {
       const map = new Map();
       for (const r of list) {
         if (r[1] >= 0) continue;
-        const main = r[3] || r[4] || tr("Ohne Kategorie", "Uncategorised");
-        if (!map.has(main)) map.set(main, { name: main, total: 0, subs: new Map(), payees: new Map() });
+        const { main, sub, item } = catOf(r);
+        if (!map.has(main)) map.set(main, { name: main, total: 0, subs: new Map(), payees: new Map(), entries: 0 });
         const g = map.get(main);
         g.total -= r[1];
-        const sub = r[4] || main;
+        if (item) g.entries -= r[1];
         g.subs.set(sub, (g.subs.get(sub) || 0) - r[1]);
         const payee = r[2] || "?";
         g.payees.set(payee, (g.payees.get(payee) || 0) - r[1]);
@@ -298,7 +347,7 @@ export class StatsView {
       let bookingsList = "";
       if (pick) {
         const hits = period
-          .filter((r) => r[1] < 0 && (r[3] || r[4] || tr("Ohne Kategorie", "Uncategorised")) === c.name && (pick.kind === "sub" ? (r[4] || c.name) === pick.name : (r[2] || "?") === pick.name))
+          .filter((r) => r[1] < 0 && catOf(r).main === c.name && (pick.kind === "sub" ? catOf(r).sub === pick.name : (r[2] || "?") === pick.name))
           .sort((a, b) => b[0].localeCompare(a[0]));
         const shown = hits.slice(0, this._statsMore ? hits.length : 40);
         const sum = hits.reduce((t, r) => t - r[1], 0);
@@ -315,13 +364,13 @@ export class StatsView {
           <span class="st-cat-a">${this._moneyPlain(c.total / perYear)}</span>
           <span class="st-cat-d">${side}</span>
         </button>
-        ${open ? `<div class="stats-detail"><div><h4>${tr("Unterkategorien", "Sub categories")}</h4>${list(c.subs, "sub")}</div><div><h4>${tr("Größte Empfänger", "Biggest payees")}</h4>${list(c.payees, "payee")}</div></div>${bookingsList}` : ""}
+        ${open ? `<div class="stats-detail"><div><h4>${c.entries >= c.total / 2 ? tr("Posten und Unterkategorien", "Entries and sub categories") : tr("Unterkategorien", "Sub categories")}</h4>${list(c.subs, "sub")}</div><div><h4>${tr("Größte Empfänger", "Biggest payees")}</h4>${list(c.payees, "payee")}</div></div>${bookingsList}` : ""}
       </div>`;
     }).join("");
     const categories = `<div class="card st-card">
       <div class="st-head"><h3>${tr("Ausgaben nach Kategorie", "Spending by category")}</h3><span class="hint">${trendCats ? `${firstFull} → ${lastFull}` : prevCats ? tr(`ggü. ${vsLabel}`, `vs ${vsLabel}`) : ""}</span></div>
       ${cats.length ? `<div class="st-donut"><svg viewBox="0 0 132 132" role="img" aria-label="${tr("Anteile der Kategorien", "Category shares")}">${ring}</svg><div class="st-cats">${catRows}</div></div>
-      <p class="hint">${tr("Antippen zeigt Unterkategorien und Empfänger, darin ein Eintrag die einzelnen Buchungen.", "Tap for sub categories and payees, then an entry for its bookings.")}</p>` : `<p class="hint">${tr("Keine Ausgaben in diesem Zeitraum.", "No spending in this period.")}</p>`}
+      <p class="hint">${tr("Zugeordnete Umsätze zählen zur Kategorie ihres Postens oder Budgets, die übrigen zur Kategorie der Bank. Antippen zeigt Unterkategorien und Empfänger, darin ein Eintrag die einzelnen Buchungen. Über „zuordnen“ gibst du einem Umsatz einen Posten oder nur eine Kategorie.", "Assigned transactions count under the category of their entry or budget, the others under the bank's category. Tap for sub categories and payees, then an entry for its bookings. Use “assign” to give a transaction an entry or just a category.")}</p>` : `<p class="hint">${tr("Keine Ausgaben in diesem Zeitraum.", "No spending in this period.")}</p>`}
     </div>`;
 
     // At a glance: the insights in one line each.
@@ -343,10 +392,10 @@ export class StatsView {
         <div class="st-head"><h3>${tr(`Umsätze ${monthLabel(month)}`, `Transactions ${monthLabel(month)}`)}</h3><span class="hint">${period.length === 1 ? tr("1 Buchung", "1 booking") : tr(`${period.length} Buchungen`, `${period.length} bookings`)}</span></div>
         ${[...byDay.entries()].map(([day, list]) => `<div class="st-day">${esc(fmtDate(day, { weekday: "short", day: "numeric", month: "long" }))}</div>
           ${list.map((r) => {
-            const cat = r[3] || r[4] || tr("Ohne Kategorie", "Uncategorised");
+            const cat = catOf(r).main;
             const c = r[1] > 0 ? "var(--success-color, #1baf7a)" : colorOf.get(cat) || "var(--viz-other)";
             return `<div class="st-tx"><span class="st-av" style="--c:${c}">${esc((r[2] || "?").trim().charAt(0).toUpperCase())}</span>
-              <div class="st-tx-main"><div class="st-tx-n">${esc(r[2] || "?")}</div><div class="st-tx-m"><span>${esc(r[4] || r[3] || "")}</span>${assignChip(r)}</div>${r[6] ? `<div class="st-tx-p">${esc(r[6].slice(0, 90))}</div>` : ""}</div>
+              <div class="st-tx-main"><div class="st-tx-n">${esc(r[2] || "?")}</div><div class="st-tx-m"><span>${esc(r[1] < 0 ? catOf(r).main : r[4] || r[3] || "")}</span>${assignChip(r)}</div>${r[6] ? `<div class="st-tx-p">${esc(r[6].slice(0, 90))}</div>` : ""}</div>
               <span class="st-tx-a ${r[1] > 0 ? "pos" : ""}">${r[1] > 0 ? "+" : ""}${this._moneyPlain(r[1])}</span></div>`;
           }).join("")}`).join("")}
       </div>`;
@@ -667,7 +716,11 @@ export class StatsView {
     const same = (this._ledger?.rows || []).filter((x) => nameKey(x[2] || "") === nameKey(r[2] || "") && (x[1] < 0) === (r[1] < 0));
     const kinds = new Set(same.map((x) => x[4] || x[3] || ""));
     const mixed = kinds.size > 1 || !nameKey(r[2] || "");
-    return { type: "assign", row: r, current, target: target || "", mixed };
+    const manual = this._state.user.settings?.stats_categories || {};
+    const own = manual[this._statsRowKey(r)] || manual[`${key}`];
+    // A transaction with a category picked by hand opens on that choice again.
+    if (own && !current) return { type: "assign", row: r, current, target: "category", mixed: !manual[key], category: own };
+    return { type: "assign", row: r, current, target: target || "", mixed, category: "" };
   }
 
   _renderAssignForm(d) {
@@ -687,13 +740,15 @@ export class StatsView {
           ${budgets.length ? `<optgroup label="${tr("Budgets", "Budgets")}">${budgets.map(option).join("")}</optgroup>` : ""}
           ${regular.length ? `<optgroup label="${tr("Posten", "Entries")}">${regular.map(option).join("")}</optgroup>` : ""}
           <option value="once" ${d.target === "once" ? "selected" : ""}>${tr("Neuer einmaliger Posten", "New one-off entry")}</option>
+          <option value="category" ${d.target === "category" ? "selected" : ""}>${tr("Nur Kategorie festlegen (ohne Posten)", "Only set a category (no entry)")}</option>
         </select></label>
         <label class="full">${tr("Name, falls neuer Posten", "Name, if new entry")}<input name="name" maxlength="80" value="${esc(r[2] || "")}"></label>
+        <label class="full suggest-field">${tr("Kategorie, falls neuer Posten oder nur Kategorie", "Category, if new entry or only a category")}<input name="category" maxlength="60" autocomplete="off" placeholder="${esc(r[3] || r[4] || tr("Auswählen oder neue eingeben", "Pick one or type a new one"))}" value="${esc(d.category || "")}"><div class="suggest" hidden></div></label>
       </div>
       <label class="check"><input type="checkbox" name="remember" ${d.mixed ? "" : "checked"}> ${tr(`Alle Umsätze von „${esc(r[2] || "?")}“ gehören dazu, auch frühere und künftige`, `All transactions from “${esc(r[2] || "?")}” belong to it, past and future`)}</label>
       <p class="hint">${tr("So kannst du auch alte Anbieter dem heutigen Posten zuordnen, z. B. den früheren Stromanbieter dem Posten Strom. Die Preisentwicklung zeigt dann alles in einer Zeile.", "This also lets you assign old providers to today's entry, e.g. the former electricity provider to Electricity. Price changes then show everything in one line.")}</p>
       ${d.mixed ? `<p class="hint">${tr(`Von „${esc(r[2] || "?")}“ gibt es verschiedene Arten von Umsätzen. Deshalb ist das Häkchen aus.`, `“${esc(r[2] || "?")}” has different kinds of transactions, so this is off.`)}</p>` : ""}
-      <p class="hint">${tr("Budget: wird als Ausgabe mit diesem Datum eingetragen. Posten: hakt den nächstgelegenen offenen Termin mit echtem Datum und Betrag ab.", "Budget: added as a spending on this date. Entry: confirms the nearest open date with the real date and amount.")}</p>
+      <p class="hint">${tr("Budget: wird als Ausgabe mit diesem Datum eingetragen. Posten: hakt den nächstgelegenen offenen Termin mit echtem Datum und Betrag ab. Nur Kategorie: für Käufe ohne Posten, die Statistik zählt sie dann unter dieser Kategorie. Leer lassen nimmt eine selbst gewählte Kategorie wieder weg.", "Budget: added as a spending on this date. Entry: confirms the nearest open date with the real date and amount. Only a category: for purchases without an entry; the statistics then count them under this category. Leave it empty to remove a category you picked.")}</p>
       ${this._error ? `<div class="error">${esc(this._error)}</div>` : ""}
       <div class="dialog-actions"><span></span><div>
         <button type="button" class="secondary" data-action="close">${tr("Abbrechen", "Cancel")}</button>
