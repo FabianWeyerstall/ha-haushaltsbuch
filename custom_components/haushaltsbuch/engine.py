@@ -537,15 +537,20 @@ def _spendings_by_day(item: dict[str, Any]) -> dict[date, float]:
 def _budget_plan(
     item: dict[str, Any], period: tuple[date, date]
 ) -> tuple[float, list[date]]:
-    """The budget for one period (pro rata if it starts or ends inside) and its active days."""
+    """The budget for one period and its active days.
+
+    A period counts the full amount you entered, even when the budget starts
+    or ends inside it, so the app never shows a figure you did not enter
+    (e.g. 428,57 € of a 500 € budget started in the middle of a month). A
+    price change counts from the period its date falls in.
+    """
     begin, stop = period
-    total_days = (stop - begin).days + 1
     active = [
         begin + timedelta(days=i)
-        for i in range(total_days)
+        for i in range((stop - begin).days + 1)
         if _budget_active(item, begin + timedelta(days=i))
     ]
-    budget = sum(abs(amount_on(item, day)) / total_days for day in active)
+    budget = abs(amount_on(item, active[-1])) if active else 0.0
     return budget, active
 
 
@@ -594,14 +599,19 @@ def budget_amounts(
 def budget_in_range(
     item: dict[str, Any], start: date, end: date, find_period: PeriodFinder = calendar_period
 ) -> tuple[float, float]:
-    """Budget and recorded spendings of the days start..end (pro rata per period)."""
+    """Budget and recorded spendings of the days start..end.
+
+    Each budget month inside the range counts its full budget; a month only
+    partly inside counts the matching share of its days.
+    """
     budget = 0.0
     day = start
     while day <= end:
-        if _budget_active(item, day):
-            begin, stop = find_period(day)
-            budget += abs(amount_on(item, day)) / ((stop - begin).days + 1)
-        day += timedelta(days=1)
+        begin, stop = find_period(day)
+        full, _ = _budget_plan(item, (begin, stop))
+        inside = (min(stop, end) - max(begin, start)).days + 1
+        budget += full * inside / ((stop - begin).days + 1)
+        day = stop + timedelta(days=1)
     spent = sum(
         abs(float(s.get("amount") or 0))
         for s in item.get("spendings") or []
