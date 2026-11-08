@@ -1,8 +1,9 @@
 """Versioned backups of all Haushaltsbuch data in /config/haushaltsbuch_backups.
 
 A backup holds the book (items, households, users) and the saved bank
-transactions. Backups are made by hand, before every CSV import and before a
-restore, and the newest ones are kept. Restoring replaces the data of all
+transactions. Backups are made by hand, before every CSV import, before a
+restore and before an update changes the layout of the stored data, and the
+newest ones are kept. Restoring replaces the data of all
 users, so only administrators may list, download or restore them.
 """
 from __future__ import annotations
@@ -18,12 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .ledger import Ledger
+from .migrations import BOOK_VERSION, LEDGER_VERSION, NewerDataError, migrate_book, migrate_ledger, version_of
 from .store import Book, ValidationError
 
 BACKUP_FORMAT = "haushaltsbuch-backup"
 BACKUP_VERSION = 1
 KEEP = 30
-REASONS = ("manual", "csv_import", "before_restore", "upload")
+REASONS = ("manual", "csv_import", "before_restore", "upload", "before_update")
 _NAME = re.compile(r"^\d{8}-\d{6}(-\d+)?-[a-z_]+\.json$")
 
 
@@ -37,6 +39,8 @@ def make_document(book: Book, ledger: Ledger, reason: str) -> dict[str, Any]:
         "version": BACKUP_VERSION,
         "created": dt_util.now().isoformat(timespec="seconds"),
         "reason": reason,
+        "book_version": list(BOOK_VERSION),
+        "ledger_version": list(LEDGER_VERSION),
         "book": copy.deepcopy(book.data),
         "ledger": copy.deepcopy(ledger.data),
     }
@@ -54,15 +58,26 @@ def summary(document: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def upgrade(document: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Book and ledger of a backup in the current layout (backups before 0.10.0rc8 have no version)."""
+    try:
+        book = migrate_book(version_of(document.get("book_version")), document["book"])
+        ledger = migrate_ledger(version_of(document.get("ledger_version")), document.get("ledger") or {"users": {}})
+    except NewerDataError as err:
+        raise ValidationError("backup_newer") from err
+    return book, ledger
+
+
 def check_document(document: Any) -> dict[str, Any]:
     """Accept only a complete backup; the book must load without errors."""
     if not isinstance(document, dict) or document.get("format") != BACKUP_FORMAT:
         raise ValidationError("backup_format")
     if not isinstance(document.get("book"), dict) or not isinstance(document["book"].get("items"), dict):
         raise ValidationError("backup_book")
+    book, ledger = upgrade(document)
     try:
-        Book(copy.deepcopy(document["book"]))
-        Ledger(copy.deepcopy(document.get("ledger") or {"users": {}}))
+        Book(book)
+        Ledger(ledger)
     except Exception as err:  # noqa: BLE001 - any broken file is a format error
         raise ValidationError("backup_content") from err
     return document

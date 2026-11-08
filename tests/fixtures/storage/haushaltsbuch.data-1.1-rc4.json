@@ -1,0 +1,193 @@
+{
+ "version": 1,
+ "minor_version": 1,
+ "key": "haushaltsbuch.data",
+ "data": {
+  "users": {
+   "anna": {
+    "balance": 1234.56,
+    "balance_date": "2026-11-01",
+    "settings": {
+     "special_min_months": 3,
+     "special_min_amount": 50.0,
+     "salary_item_id": "29608b8a471a4caba046f859d81e508d",
+     "stats_ignored": [
+      "n:musterverein|expense"
+     ],
+     "csv_profiles": {}
+    }
+   }
+  },
+  "items": {
+   "29608b8a471a4caba046f859d81e508d": {
+    "id": "29608b8a471a4caba046f859d81e508d",
+    "owner": "anna",
+    "confirmations": [],
+    "name": "Gehalt",
+    "direction": "income",
+    "amount": 2700.0,
+    "amount_variance_pct": 0.0,
+    "category": "Gehalt",
+    "icon": "mdi:briefcase",
+    "start_date": "2026-01-29",
+    "end_date": null,
+    "schedule": {
+     "frequency": "monthly",
+     "interval": 1,
+     "dates": [],
+     "weekday": 3,
+     "week": -1
+    },
+    "date_tolerance_days": 0,
+    "weekend_shift": "previous",
+    "certainty": "sicher",
+    "note": "",
+    "household_id": null,
+    "price_changes": [],
+    "contract": null,
+    "bank_keys": []
+   },
+   "0e63e9f10eb14080b71fe6f6c39e38cf": {
+    "id": "0e63e9f10eb14080b71fe6f6c39e38cf",
+    "owner": "anna",
+    "confirmations": [
+     {
+      "due_date": "2026-10-04",
+      "status": "booked",
+      "actual_date": "2026-10-05",
+      "actual_amount": 74.0,
+      "by": "anna"
+     }
+    ],
+    "name": "Strom",
+    "direction": "expense",
+    "amount": 74.0,
+    "amount_variance_pct": 0.0,
+    "category": "Strom",
+    "icon": "mdi:flash",
+    "start_date": "2025-09-04",
+    "end_date": null,
+    "schedule": {
+     "frequency": "monthly",
+     "interval": 1,
+     "dates": []
+    },
+    "date_tolerance_days": 0,
+    "weekend_shift": null,
+    "certainty": null,
+    "note": "",
+    "household_id": "110097ebf8d84bf1b8aae950e6c8f64e",
+    "price_changes": [],
+    "contract": null,
+    "bank_keys": [
+     "m:DE33ZZZ00000000003|SW-998877"
+    ]
+   },
+   "6787e73d4ad24677ae32ba61af691d62": {
+    "id": "6787e73d4ad24677ae32ba61af691d62",
+    "owner": "anna",
+    "confirmations": [],
+    "name": "Lebensmittel",
+    "direction": "expense",
+    "amount": 400.0,
+    "amount_variance_pct": 0.0,
+    "category": "Lebensmittel",
+    "icon": "mdi:cart",
+    "start_date": "2026-01-01",
+    "end_date": null,
+    "schedule": {
+     "frequency": "budget",
+     "interval": 1,
+     "dates": []
+    },
+    "date_tolerance_days": 0,
+    "weekend_shift": null,
+    "certainty": null,
+    "note": "",
+    "household_id": "110097ebf8d84bf1b8aae950e6c8f64e",
+    "price_changes": [],
+    "contract": null,
+    "bank_keys": [],
+    "spendings": [
+     {
+      "id": "3ab7e6f2fad1",
+      "date": "2026-11-03",
+      "amount": 68.01,
+      "note": "Biomarkt",
+      "by": "anna"
+     }
+    ]
+   },
+   "b560d00f77f0494ca5b89b8108f07dd8": {
+    "id": "b560d00f77f0494ca5b89b8108f07dd8",
+    "owner": "ben",
+    "confirmations": [],
+    "name": "Friseur",
+    "direction": "expense",
+    "amount": 25.0,
+    "amount_variance_pct": 0.0,
+    "category": "Sonstiges",
+    "icon": "mdi:content-cut",
+    "start_date": "2026-09-10",
+    "end_date": null,
+    "schedule": {
+     "frequency": "rolling",
+     "interval": 6,
+     "dates": [],
+     "unit": "weeks",
+     "learn": true
+    },
+    "date_tolerance_days": 0,
+    "weekend_shift": null,
+    "certainty": "wahrscheinlich",
+    "note": "",
+    "household_id": null,
+    "price_changes": [],
+    "contract": null,
+    "bank_keys": []
+   },
+   "932e203fc0424ff7b65253d80c080cc2": {
+    "id": "932e203fc0424ff7b65253d80c080cc2",
+    "owner": "anna",
+    "confirmations": [],
+    "name": "Reifenwechsel",
+    "direction": "expense",
+    "amount": 60.0,
+    "amount_variance_pct": 0.0,
+    "category": "Auto",
+    "icon": "mdi:car",
+    "start_date": "2026-04-01",
+    "end_date": null,
+    "schedule": {
+     "frequency": "fixed_dates",
+     "interval": 1,
+     "dates": [
+      "04-01",
+      "10-15"
+     ]
+    },
+    "date_tolerance_days": 0,
+    "weekend_shift": null,
+    "certainty": "unsicher",
+    "note": "Werkstatt anrufen",
+    "household_id": null,
+    "price_changes": [],
+    "contract": null,
+    "bank_keys": []
+   }
+  },
+  "households": {
+   "110097ebf8d84bf1b8aae950e6c8f64e": {
+    "name": "Zuhause",
+    "members": [
+     "anna",
+     "ben"
+    ],
+    "created_by": "anna",
+    "balance": 3000.0,
+    "balance_date": "2026-11-01",
+    "entities": false
+   }
+  }
+ }
+}

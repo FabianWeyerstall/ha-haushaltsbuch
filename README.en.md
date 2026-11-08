@@ -20,7 +20,7 @@ All items are entered by hand. There is no bank connection, and the data stays i
 <img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/10-months.png" alt="Monthly overview" width="240">
 </p>
 
-**Contents:** [Features](#features) · [Installation](#installation-via-hacs) · [How it works](#how-it-works) · [Guide](#guide) · [Booking buttons](#the-buttons-of-a-booking) · [Shared household](#shared-household-book) · [Good to know](#good-to-know)
+**Contents:** [Features](#features) · [Installation](#installation) · [How it works](#how-it-works) · [Guide](#guide) · [Booking buttons](#the-buttons-of-a-booking) · [Shared household](#shared-household-book) · [Good to know](#good-to-know)
 
 ## Features
 
@@ -39,26 +39,27 @@ All items are entered by hand. There is no bank connection, and the data stays i
 - **Monthly overview** with income, expenses and balance for 12 months. **Special entries** (anything that does not occur every month, e.g. insurance, bonus) are highlighted. Below that, **spending per category**.
 - **Overview** dashboard with key figures and a pie chart by category
 - **Search** in entries and **confirm all open bookings at once**
-- **Templates** for typical entries (salary, rent, electricity, internet, mobile, insurance, vehicle tax, savings plan, streaming, fuel, tyre change …)
+- **Templates** for typical entries (salary, rent, electricity, internet, mobile, insurance, vehicle tax, savings plan, streaming, fuel, tyre change, house …). “House” creates a one-off entry in the category House, for anything still to come for the house.
+- **Duplicate an entry**: open it and tap **Duplicate** at the bottom. The copy keeps every setting; change the name, amount and the rest, then save. Past bookings are not copied.
 - **Export and import** your own entries as a JSON file, e.g. as a backup or to move to another HA instance
 - **Incognito mode** that blurs all amounts, e.g. when showing the app to friends
 - **Contract notice reminders** as an HA event plus ready-made blueprints (English and German) for phone notifications
 
-## Installation via HACS
+## Installation
 
-Haushaltsbuch is in the HACS default store, so you can find it directly in HACS:
+Haushaltsbuch is in the HACS default store. From Home Assistant 2026.11 on, HACS is built in as the **Marketplace**; before that you need HACS as a separate add-on.
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FabianWeyerstall&repository=ha-haushaltsbuch&category=integration)
 
-1. In Home Assistant, open **HACS** and search for **Haushaltsbuch** (or use the button above)
+1. Open **Settings → Marketplace** and search for **Haushaltsbuch** (before 2026.11: **HACS** in the sidebar, or use the button above)
 2. **Download** it and restart Home Assistant
 3. **Settings → Devices & services → Add integration → Haushaltsbuch**
 4. **Haushaltsbuch** appears in the sidebar (the sidebar title is the same for all users), also in the Home Assistant companion app
 
 <details>
-<summary>If it does not show up in HACS: add it as a custom repository</summary>
+<summary>If it does not show up: add it as a custom repository</summary>
 
-1. Open HACS → ⋮ (top right) → **Custom repositories**
+1. Open the Marketplace or HACS → ⋮ (top right) → **Custom repositories**
 2. Add `https://github.com/FabianWeyerstall/ha-haushaltsbuch` with type **Integration**
 3. Continue with step 2 above
 
@@ -307,11 +308,13 @@ Tab **Entries** → **Export** saves your own entries as a JSON file. **Import**
 
 ### Backups and restore
 
-Tab **Household** → **Backups** (HA admins only): **Back up now** saves everything, i.e. entries, households, balances and the statistics transactions, for all users. A backup is also made automatically before every CSV import and every restore. The last 30 are kept as JSON in `/config/haushaltsbuch_backups`, so they are part of normal Home Assistant backups too. Each backup can be **downloaded** or **restored**, and **Restore from file …** takes a downloaded one.
+Tab **Household** → **Backups** (HA admins only): **Back up now** saves everything, i.e. entries, households, balances and the statistics transactions, for all users. A backup is also made automatically before every CSV import, every restore and whenever an update changes the layout of the stored data. Older backups can still be restored after an update. The last 30 are kept as JSON in `/config/haushaltsbuch_backups`, so they are part of normal Home Assistant backups too. Each backup can be **downloaded** or **restored**, and **Restore from file …** takes a downloaded one.
 
 ## Importing transactions from your banking app (CSV)
 
 Tab **Entries** → **Import** also takes CSV files of transactions from your banking app, several at once (one per account). The file is only read in the browser; nothing is saved until you apply the dialog.
+
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/16-csv-import.png" alt="Matching transactions" width="260">
 
 - **New regular payments** (salary, rent, insurance, subscriptions …) are suggested with schedule, next date and certainty. Payments that stopped months ago (old flat, cancelled contract) are not suggested.
 - **Matches your entries:** bookings of existing entries are confirmed with their real date and amount, card payments become spendings of the matching budget. If the amount changed for good, a price change is offered. The book remembers which direct debit belongs to which entry.
@@ -328,7 +331,12 @@ Tab **Entries** → **Import** also takes CSV files of transactions from your ba
 
 ## Statistics
 
-When importing a CSV you can **save all transactions for statistics**. They are kept in a separate file in your Home Assistant (`.storage/haushaltsbuch.ledger`) and only you can see them. The **Statistics** tab shows per year or for all years: income, spending, what is left (compared with the year before; in the running year with the same period), the history per year or month and spending by category with sub categories and biggest payees. For all years, each category shows how it developed from the first to the last full year. **Delete all** removes the saved transactions.
+When importing a CSV you can **save all transactions for statistics**. They are kept in a separate file in your Home Assistant (`.storage/haushaltsbuch.ledger`) and only you can see them. The **Statistics** tab shows per month, per year or for all years: income, spending, what is left (compared with the year before; in the running year with the same period), the history and spending by category with sub categories and biggest payees. Tap a month, category or payee to see its transactions. For all years, each category shows how it developed from the first to the last full year.
+
+**Insights** lists forgotten subscriptions (regular debits without an entry), budgets from real numbers, the price development of your contracts, expensive months, a year in review and your personal inflation. **Delete all** removes the saved transactions.
+
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/17-statistics.png" alt="Statistics of one month" width="240">
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/en/18-insights.png" alt="Insights" width="240">
 
 ## Incognito mode
 
@@ -344,7 +352,7 @@ The eye icon in the top bar blurs all amounts and balances, including in forms. 
 - **"Skipped" means it does not happen at all.** For "arrives later", leave it open or fix a date.
 - **Irregular spending** such as groceries works best as a **monthly budget**, with the real spendings entered in it.
 - **Privacy:** private entries are only visible to their owner. Household calendar and sensors are visible to all HA users and therefore off by default.
-- **Updates:** if an update only changes the user interface, reloading the page is enough (the companion app may need its frontend cache cleared). If the background logic changes, Home Assistant needs a restart; HACS will tell you.
+- **Updates:** if an update only changes the user interface, reloading the page is enough (the companion app may need its frontend cache cleared). If the background logic changes, Home Assistant needs a restart. The release notes of each version (in HACS and on GitHub) say which applies. All changes are listed in the [CHANGELOG](CHANGELOG.md) (German).
 
 ## Development
 
@@ -353,8 +361,16 @@ pip install -r requirements_test.txt
 pytest
 ```
 
-The calculation (`engine.py`) and access rules (`store.py`) have no dependency on Home Assistant. The panel is a single JavaScript file without a build step (`frontend/haushaltsbuch-panel.js`).
+The calculation (`engine.py`) and access rules (`store.py`) have no dependency on Home Assistant. The panel consists of JavaScript modules without a build step (`frontend/`, overview at the top of `haushaltsbuch-panel.js`). Panel tests: `tests/panel` and `tests/browser`.
 
 ## Releasing
 
-Bump the version in `custom_components/haushaltsbuch/manifest.json` and `const.py` and merge into `main`. The *Release* workflow then creates the GitHub release `vX.Y.Z` automatically and HACS offers the update.
+Prefer frequent small versions over rare big ones: one version per feature or fix.
+
+1. Bump the version in `custom_components/haushaltsbuch/manifest.json` and `const.py`.
+2. Add a section `## <version> – <date>` at the top of `CHANGELOG.md` (a test checks it exists).
+3. Merge into `main`.
+
+The *Release* workflow then creates the GitHub release `vX.Y.Z` automatically and HACS offers the update.
+
+The restart hint is not written by hand: `scripts/release_notes.py` compares with the previous version and asks for a restart when Python code or translations changed, otherwise for a page reload.

@@ -1,0 +1,17 @@
+{
+ "version": 1,
+ "key": "haushaltsbuch.data",
+ "data": {
+  "users": {"anna": {"balance": 500.0}},
+  "items": {
+   "a1": {
+    "id": "a1", "owner": "anna", "household_id": null, "name": "Internet", "direction": "expense",
+    "amount": 39.99, "category": "Internet & Telefon", "icon": "mdi:router-wireless",
+    "start_date": "2025-11-15", "end_date": null,
+    "schedule": {"frequency": "monthly", "interval": 1},
+    "date_tolerance_days": 0, "weekend_shift": "next", "certainty": "sicher", "note": "",
+    "confirmations": []
+   }
+  }
+ }
+}
