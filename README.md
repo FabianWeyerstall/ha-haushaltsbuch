@@ -19,7 +19,7 @@ Alle Posten werden von Hand erfasst. Es gibt keine Bankanbindung, und die Daten 
 <img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/10-monate.png" alt="Monatsübersicht" width="240">
 </p>
 
-**Inhalt:** [Funktionen](#funktionen) · [Installation](#installation-über-hacs) · [So funktioniert es](#so-funktioniert-das-haushaltsbuch) · [Anleitung](#anleitung) · [Die Knöpfe einer Buchung](#die-knöpfe-einer-buchung) · [Haushalt](#gemeinsames-haushaltsbuch) · [Gut zu wissen](#gut-zu-wissen)
+**Inhalt:** [Funktionen](#funktionen) · [Installation](#installation) · [So funktioniert es](#so-funktioniert-das-haushaltsbuch) · [Anleitung](#anleitung) · [Die Knöpfe einer Buchung](#die-knöpfe-einer-buchung) · [Haushalt](#gemeinsames-haushaltsbuch) · [Gut zu wissen](#gut-zu-wissen)
 
 ## Funktionen
 
@@ -38,24 +38,25 @@ Alle Posten werden von Hand erfasst. Es gibt keine Bankanbindung, und die Daten 
 - **Monatsübersicht** mit Einnahmen, Ausgaben und Saldo für 12 Monate. **Sonderposten** (alles, was nicht jeden Monat kommt, z.B. GEZ, Versicherungen, Bonus) sind pro Monat und in Zeitleiste und Kalender gelb markiert. Darunter die **Ausgaben nach Kategorie** für die nächsten 12 Monate.
 - **Übersicht** als Dashboard mit Kennzahlen und Kreisdiagramm nach Kategorie
 - **Suche** in den Posten und **alle offenen Buchungen auf einmal bestätigen**
-- **Vorlagen** für typische Posten (GEZ, Strom, Internet, Handy, Versicherungen, Kfz-Steuer, Streaming-Abos, Gehalt, Sparen, Tanken, Räderwechsel …)
+- **Vorlagen** für typische Posten (GEZ, Strom, Internet, Handy, Versicherungen, Kfz-Steuer, Streaming-Abos, Gehalt, Sparen, Tanken, Räderwechsel, Haus …). „Haus“ legt einen einmaligen Posten in der Kategorie Haus an, für alles, was am Haus noch ansteht.
+- **Posten duplizieren**: Im geöffneten Posten unten auf **Duplizieren** tippen. Die Kopie übernimmt alle Einstellungen, Name, Betrag und den Rest passt du an und speicherst. Bisherige Buchungen werden nicht mitkopiert.
 - **Export und Import** der eigenen Posten als JSON-Datei, z.B. als Sicherung oder zum Umzug auf eine andere HA-Instanz. Beim Import wählbar: hinzufügen (Doppelte werden übersprungen) oder ersetzen
 
-## Installation über HACS
+## Installation
 
-Das Haushaltsbuch ist im HACS-Standardverzeichnis, du findest es direkt in HACS:
+Das Haushaltsbuch ist im HACS-Standardverzeichnis. Ab Home Assistant 2026.11 ist HACS als **Marketplace** eingebaut, davor brauchst du HACS als eigene Erweiterung.
 
 [![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FabianWeyerstall&repository=ha-haushaltsbuch&category=integration)
 
-1. In Home Assistant **HACS** öffnen und nach **Haushaltsbuch** suchen (oder den Knopf oben benutzen)
+1. **Einstellungen → Marketplace** öffnen und nach **Haushaltsbuch** suchen (vor 2026.11: **HACS** in der Seitenleiste, oder den Knopf oben benutzen)
 2. **Herunterladen** und Home Assistant neu starten
 3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Haushaltsbuch**
 4. In der Seitenleiste erscheint **Haushaltsbuch**, auch in der Home-Assistant-App auf dem iPhone
 
 <details>
-<summary>Falls es in HACS nicht auftaucht: als benutzerdefiniertes Repository hinzufügen</summary>
+<summary>Falls es nicht auftaucht: als benutzerdefiniertes Repository hinzufügen</summary>
 
-1. HACS öffnen → oben rechts ⋮ → **Benutzerdefinierte Repositories**
+1. Marketplace bzw. HACS öffnen → oben rechts ⋮ → **Benutzerdefinierte Repositories**
 2. `https://github.com/FabianWeyerstall/ha-haushaltsbuch` als Typ **Integration** hinzufügen
 3. Weiter mit Schritt 2 oben
 
@@ -304,7 +305,7 @@ Tippe auf einen Anteil (z.B. „wahrscheinlich“, „Sonderposten, umgelegt“,
 Jeder Home-Assistant-Nutzer hat seine eigenen, privaten Posten und seinen eigenen Kontostand. Wer möchte, legt ein **Haushaltsbuch** an und lädt andere HA-Nutzer ein. Beim Bearbeiten eines Postens wählst du, ob er nur für dich oder für den Haushalt sichtbar ist. Das Haushaltsbuch zeigt die gemeinsamen Einnahmen und Ausgaben aller Mitglieder und hat ein eigenes Haushaltskonto.
 
 - Nur der Besitzer kann einen Posten ändern, Mitglieder dürfen gemeinsame Buchungen bestätigen.
-- Auch HA-Admins sehen keine privaten Posten anderer Nutzer.
+- Auch HA-Admins sehen im Haushaltsbuch keine privaten Posten anderer Nutzer. (Sicherungen enthalten allerdings die Daten aller Nutzer und sind deshalb nur für Admins.)
 - Optional pro Haushalt: ein **Kalender** und **Sensoren** (nächste Ausgabe, nächste Einnahme, Kontostand zum Monatsende) für Dashboards und Automationen. Diese Entitäten sind für alle HA-Nutzer sichtbar, daher standardmäßig aus.
 
 <img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/11-haushalt.png" alt="Haushalt" width="260">
@@ -314,6 +315,38 @@ Tab **Haushalt** → **+ Haushalt anlegen**, Namen vergeben und andere HA-Nutzer
 ## Sichern und umziehen
 
 Tab **Posten** → **Exportieren** speichert deine eigenen Posten als JSON-Datei (auf dem iPhone über das Teilen-Menü, „In Dateien sichern“). **Importieren** liest so eine Datei wieder ein, wahlweise zusätzlich zu den vorhandenen Posten (Doppelte werden übersprungen) oder als Ersatz. Importierte Posten sind zunächst privat.
+
+### Sicherungen und zurückspielen
+
+Tab **Haushalt** → **Sicherungen** (nur für HA-Admins): **Jetzt sichern** speichert alles, also Posten, Haushalte, Kontostände und die Umsätze der Statistik, für alle Nutzer. Automatisch gesichert wird außerdem vor jedem CSV-Import, vor jedem Zurückspielen und wenn ein Update das Format der gespeicherten Daten ändert. Ältere Sicherungen lassen sich auch nach einem Update zurückspielen. Die letzten 30 Sicherungen liegen als JSON in `/config/haushaltsbuch_backups` und sind damit auch in den normalen Home-Assistant-Backups enthalten. Jede Sicherung lässt sich **herunterladen** oder **zurückspielen**, und mit **Sicherungsdatei zurückspielen …** auch eine heruntergeladene Datei.
+
+## Umsätze aus der Banking-App importieren (CSV)
+
+Tab **Posten** → **Importieren** nimmt neben der Export-Datei auch CSV-Dateien mit Umsätzen aus deiner Banking-App, auch mehrere auf einmal (eine pro Konto). Die Datei wird nur im Browser gelesen. Gespeichert wird erst, was du im Dialog übernimmst.
+
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/16-csv-import.png" alt="Umsätze abgleichen" width="260">
+
+- **Neue regelmäßige Zahlungen** (Gehalt, Miete, Versicherungen, Abos …) werden mit Turnus, nächstem Termin und Sicherheitsstufe vorgeschlagen. Was seit Monaten nicht mehr kommt (alte Wohnung, gekündigter Vertrag), wird nicht vorgeschlagen.
+- **Passt zu deinen Posten:** Buchungen zu vorhandenen Posten werden mit echtem Datum und Betrag abgehakt, Kartenzahlungen landen als Ausgaben im passenden Budget. Weicht der Betrag dauerhaft ab, wird eine Preisänderung angeboten. Das Haushaltsbuch merkt sich, welche Lastschrift zu welchem Posten gehört.
+- **Selten oder unregelmäßig:** jährliche Beiträge, Jahresabrechnungen (Nachzahlung oder Erstattung) und gleitende Posten wie der Friseur, zunächst nicht angehakt.
+- **Als Budget anlegen?** Häufige Kartenzahlungen einer Kategorie (z.B. Lebensmittel) als Budget pro Monat.
+- Umbuchungen zwischen deinen eigenen Konten zählen nicht mit. Vorschläge kommen aus den letzten zwei Jahren, ältere Umsätze helfen nur bei Jährlichem.
+
+**Welche Dateien gehen?**
+
+- **CSV jeder Bank:** Die Kopfzeile wird auch unter einem Vorspann gefunden, Soll/Haben-Spalten, S/H-Kennzeichen, deutsche und englische Zahlen- und Datumsformate sowie alte Windows-Zeichensätze werden erkannt. Mandatsreferenz und Gläubiger-ID werden auch aus dem Verwendungszweck gelesen (EREF+, MREF+, CRED+, SVWZ+). Liefert die Bank keine Kategorien, vergibt das Haushaltsbuch eigene.
+- **Spalten selbst zuordnen:** Erkennt das Haushaltsbuch eine Datei nicht sicher, fragt es einmal „Welche Spalte ist was?“ und merkt sich die Antwort für diese Bank. Über **Stimmt etwas nicht? Spalten selbst zuordnen** im Abgleich geht das auch jederzeit von Hand.
+- **CAMT.053:** Fast jede deutsche Bank bietet diesen genormten Export an (oft „CAMT“ oder „ISO 20022“). Er ist am eindeutigsten, auch als ZIP-Datei.
+- **Outbank:** Der CSV-Export von Outbank wird wie bisher gelesen, mit Kategorien.
+
+## Statistik
+
+Beim CSV-Import kannst du alle Umsätze **für die Statistik speichern**. Sie liegen in einer eigenen Datei in deinem Home Assistant (`.storage/haushaltsbuch.ledger`) und sind nur für dich sichtbar. Der Tab **Statistik** zeigt pro Monat, pro Jahr oder über alle Jahre: eingenommen, ausgegeben, übrig (mit Vergleich zum Vorjahr, im laufenden Jahr zum gleichen Zeitraum), den Verlauf und die Ausgaben nach Kategorie mit Unterkategorien und den größten Empfängern. Monate, Kategorien und Empfänger lassen sich antippen und zeigen die einzelnen Umsätze. Über alle Jahre steht neben jeder Kategorie, wie sie sich vom ersten zum letzten vollen Jahr entwickelt hat.
+
+Unter **Auswertungen** stehen vergessene Abos (regelmäßige Abbuchungen ohne Posten), Budgets aus echten Zahlen, die Preisentwicklung deiner Verträge, teure Monate, ein Jahresrückblick und dein persönlicher Preisanstieg. **Alle löschen** entfernt die gespeicherten Umsätze wieder.
+
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/17-statistik.png" alt="Statistik eines Monats" width="240">
+<img src="https://raw.githubusercontent.com/FabianWeyerstall/ha-haushaltsbuch/main/docs/images/18-auswertungen.png" alt="Auswertungen" width="240">
 
 ## Inkognito-Modus
 
@@ -330,7 +363,7 @@ Das Auge oben in der Leiste macht alle Beträge und Kontostände unscharf, auch 
 - **Unregelmäßige Ausgaben** wie Lebensmittel oder Freizeit am besten als **Budget pro Monat** erfassen statt als viele einzelne Posten, und die echten Ausgaben darin eintragen.
 - **Privatsphäre:** Private Posten sieht nur ihr Besitzer, auch HA-Admins nicht. Kalender und Sensoren eines Haushalts sind dagegen für alle HA-Nutzer sichtbar und deshalb standardmäßig aus.
 - **Sprache:** Die Oberfläche richtet sich nach der Sprache in deinem HA-Profil: Deutsch bei Deutsch, sonst Englisch. Für englische Push-Nachrichten gibt es den Blueprint `contract_reminder.yaml`.
-- **Updates:** Betrifft ein Update nur die Oberfläche, reicht es, die Seite neu zu laden (in der iPhone-App eventuell den Frontend-Cache leeren). Ändert sich die Berechnung im Hintergrund, braucht Home Assistant einen Neustart. HACS weist dann darauf hin.
+- **Updates:** Betrifft ein Update nur die Oberfläche, reicht es, die Seite neu zu laden (in der iPhone-App eventuell den Frontend-Cache leeren). Ändert sich die Berechnung im Hintergrund, braucht Home Assistant einen Neustart. Was zutrifft, steht in den Release-Notes jeder Version (in HACS und auf GitHub). Alle Änderungen stehen im [CHANGELOG](CHANGELOG.md).
 
 ## Entwicklung
 
@@ -339,8 +372,16 @@ pip install -r requirements_test.txt
 pytest
 ```
 
-Die Berechnung (`engine.py`) und die Zugriffsregeln (`store.py`) haben keine Abhängigkeit zu Home Assistant. Das Panel ist eine einzelne JavaScript-Datei ohne Build-Schritt (`frontend/haushaltsbuch-panel.js`).
+Die Berechnung (`engine.py`) und die Zugriffsregeln (`store.py`) haben keine Abhängigkeit zu Home Assistant. Das Panel besteht aus JavaScript-Modulen ohne Build-Schritt (`frontend/`, Übersicht im Kopf von `haushaltsbuch-panel.js`). Tests fürs Panel: `tests/panel` und `tests/browser`.
 
 ## Neue Version veröffentlichen
 
-Version in `custom_components/haushaltsbuch/manifest.json` und `const.py` erhöhen und nach `main` mergen. Der Workflow „Release“ legt dann automatisch das GitHub-Release `vX.Y.Z` an, und HACS bietet das Update an.
+Lieber oft kleine Versionen als selten große: eine Version pro Funktion oder Fehlerbehebung, damit sich ein Problem leicht einer Änderung zuordnen lässt.
+
+1. Version in `custom_components/haushaltsbuch/manifest.json` und `const.py` erhöhen.
+2. In `CHANGELOG.md` oben einen Abschnitt `## <Version> – <Datum>` mit den Änderungen anlegen (Neu / Geändert / Behoben). Die Tests prüfen, dass es ihn gibt.
+3. Nach `main` mergen.
+
+Der Workflow „Release“ legt dann automatisch das GitHub-Release `vX.Y.Z` an, und HACS bietet das Update an. Eine Version wie `0.10.0b1` wird als Vorabversion (Beta) veröffentlicht. HACS zeigt sie nur, wenn beim Haushaltsbuch „Beta-Versionen anzeigen“ eingeschaltet ist. Eine Beta lässt sich auch von einem Branch aus veröffentlichen: Workflow „Release“ manuell für diesen Branch starten.
+
+Den Neustart-Hinweis schreibt niemand von Hand: `scripts/release_notes.py` vergleicht mit der vorigen Version und schreibt „neu starten“, sobald sich Python-Code oder Übersetzungen geändert haben, sonst „Seite neu laden“. Ausprobieren mit `python scripts/release_notes.py <Version>`.

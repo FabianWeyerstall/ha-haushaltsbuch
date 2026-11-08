@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 DOMAIN = "haushaltsbuch"
-VERSION = "0.9.2"
+VERSION = "1.0.0"
 
 STORAGE_KEY = f"{DOMAIN}.data"
-STORAGE_VERSION = 1
 
 PANEL_URL_PATH = "haushaltsbuch"
 PANEL_WEBCOMPONENT = "haushaltsbuch-panel"
@@ -24,6 +23,7 @@ DEFAULT_CATEGORIES = [
     "Gehalt",
     "Photovoltaik",
     "Wohnen",
+    "Haus",
     "Strom",
     "Wasser",
     "Kredite",
@@ -54,6 +54,8 @@ TEMPLATES = [
     {"name": "Kredit", "direction": "expense", "category": "Kredite", "icon": "mdi:bank", "frequency": "monthly"},
     {"name": "Sparen", "direction": "expense", "category": "Sparen", "icon": "mdi:piggy-bank", "frequency": "monthly"},
     {"name": "Bausparvertrag", "direction": "expense", "category": "Sparen", "icon": "mdi:home-plus", "frequency": "monthly"},
+    # Things for the house that are still to come (repairs, purchases): one-off, easy to find under "Haus".
+    {"name": "Haus", "direction": "expense", "category": "Haus", "icon": "mdi:home-variant", "frequency": "once", "certainty": "wahrscheinlich"},
     {"name": "Kfz-Versicherung Auto", "direction": "expense", "category": "Versicherungen", "icon": "mdi:car", "frequency": "yearly"},
     {"name": "Kfz-Versicherung Motorrad", "direction": "expense", "category": "Versicherungen", "icon": "mdi:motorbike", "frequency": "yearly"},
     {"name": "Kfz-Steuer Auto", "direction": "expense", "category": "Steuern", "icon": "mdi:car-info", "frequency": "yearly"},
@@ -85,6 +87,7 @@ DEFAULT_CATEGORIES_EN = [
     "Salary",
     "Solar",
     "Housing",
+    "House",
     "Electricity",
     "Water",
     "Loans",
@@ -109,6 +112,7 @@ TEMPLATES_EN = [
     {"name": "Solar feed-in", "direction": "income", "category": "Solar", "icon": "mdi:solar-power-variant", "frequency": "monthly"},
     {"name": "Tax refund", "direction": "income", "category": "Taxes", "icon": "mdi:cash-refund", "frequency": "once", "certainty": "unsicher"},
     {"name": "Rent", "direction": "expense", "category": "Housing", "icon": "mdi:home-city", "frequency": "monthly"},
+    {"name": "House", "direction": "expense", "category": "House", "icon": "mdi:home-variant", "frequency": "once", "certainty": "wahrscheinlich"},
     {"name": "Electricity", "direction": "expense", "category": "Electricity", "icon": "mdi:flash", "frequency": "monthly"},
     {"name": "Water", "direction": "expense", "category": "Water", "icon": "mdi:water", "frequency": "monthly"},
     {"name": "Loan", "direction": "expense", "category": "Loans", "icon": "mdi:bank", "frequency": "monthly"},

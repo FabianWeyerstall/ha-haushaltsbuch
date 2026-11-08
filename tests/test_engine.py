@@ -259,6 +259,12 @@ def test_budget_spreads_over_month_and_counts_as_likely():
     nov, dec = month_summaries([budget], date(2026, 11, 1), 2)
     assert nov["expense"] == 600 and dec["expense"] == 600
     assert nov["entries"][0]["budget"] is True
+    # Started months carry "spent of budget" for the month view, later months not.
+    tracked = item(id="food", amount=600, start_date="2026-11-01", schedule={"frequency": "budget"},
+                   spendings=[{"id": "a", "date": "2026-11-03", "amount": 80.5}, {"id": "b", "date": "2026-12-02", "amount": 9}])
+    nov, dec = month_summaries([tracked], date(2026, 11, 1), 2, today=date(2026, 11, 10))
+    assert nov["entries"][0]["budget_total"] == 600 and nov["entries"][0]["budget_spent"] == 80.5
+    assert "budget_total" not in dec["entries"][0]
     # started mid-month: pro rata
     late = item(amount=300, start_date="2026-11-16", schedule={"frequency": "budget"})
     assert month_summaries([late], date(2026, 11, 1), 1)[0]["expense"] == 150
@@ -412,4 +418,5 @@ def test_zero_budget_counts_only_entered_spendings():
     assert days[0].balance_likely == days[-1].balance_likely == 955.0  # the 45 € after the balance date, nothing more
     rows = month_summaries([pot], date(2026, 11, 1), 2, today=today)
     assert rows[0]["expense"] == 45.0 and rows[1]["expense"] == 0.0
+    assert rows[0]["entries"][0]["budget_total"] == 0.0 and rows[0]["entries"][0]["budget_spent"] == 45.0
     assert all(e["amount"] for r in rows for e in r["entries"])

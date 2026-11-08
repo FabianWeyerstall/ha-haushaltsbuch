@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # all tags, to find out whether a restart is needed
       - name: Read version
         id: version
         run: echo "version=$(jq -r .version custom_components/haushaltsbuch/manifest.json)" >> "$GITHUB_OUTPUT"
@@ -30,6 +32,10 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists"
           else
-            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes \
-              --notes "Nach dem Update Home Assistant neu starten."
+            # Versions like 0.10.0b1 become pre-releases; HACS shows them with "Show beta versions".
+            PRE=""
+            case "$TAG" in *a[0-9]*|*b[0-9]*|*rc[0-9]*) PRE="--prerelease" ;; esac
+            # CHANGELOG.md section + restart hint from the changed files (scripts/release_notes.py).
+            python3 scripts/release_notes.py "${TAG#v}" > notes.md
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" $PRE --notes-file notes.md
           fi

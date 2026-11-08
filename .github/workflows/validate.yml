@@ -16,6 +16,43 @@ jobs:
       - run: pip install -r requirements_test.txt
       - run: pytest -q
 
+  panel:
+    # Safety net for the CSV import in the panel (tests/panel/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/panel/*.test.mjs
+      - name: Lint panel files (undefined names, duplicates)
+        run: |
+          npm install --no-save --no-package-lock eslint@9.17.0 globals@15.14.0
+          npx eslint --no-config-lookup -c tests/panel/eslint.config.mjs custom_components/haushaltsbuch/frontend/*.js
+
+  browser:
+    # Real Home Assistant + Chromium: every tab, the main dialogs and the CSV import (tests/browser).
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # normally about 3 minutes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the tag of the last normal release, for the update test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements_test.txt
+      - name: Packages of a normal Home Assistant (default_config)
+        run: python tests/browser/ha_requirements.py > /tmp/ha-requirements.txt && pip install -r /tmp/ha-requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-save --no-package-lock playwright@1.49.1
+      - run: npx playwright install --with-deps chromium
+      - run: tests/browser/run.sh
+      - name: Update from the last normal release
+        run: tests/browser/upgrade.sh
+
   hassfest:
     runs-on: ubuntu-latest
     steps:
