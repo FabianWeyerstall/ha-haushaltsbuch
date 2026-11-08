@@ -109,12 +109,14 @@ class Book:
         # payees marked "is fine" in the statistics (e.g. no forgotten subscription)
         ignored = list(dict.fromkeys(str(k)[:120] for k in ignored if k))[-300:]
         profiles = _clean_csv_profiles(settings.get("csv_profiles"))
+        categories = _clean_stats_categories(settings.get("stats_categories"))
         self.user(user_id)["settings"] = {
             "special_min_months": min_months,
             "special_min_amount": min_amount,
             "salary_item_id": salary,
             "stats_ignored": ignored,
             "csv_profiles": profiles,
+            "stats_categories": categories,
         }
 
     def set_user_balance(self, user_id: str, balance: float, balance_date: str) -> None:
@@ -772,6 +774,27 @@ def _validate_item(values: dict[str, Any]) -> dict[str, Any]:
         "contract": contract,
         "bank_keys": _clean_bank_keys(values.get("bank_keys")),
     }
+
+
+def _clean_stats_categories(values: Any) -> dict[str, str]:
+    """Categories the user picked by hand for transactions without an entry.
+
+    Keyed by payee ("n:payee|expense") or by a single transaction
+    ("r:date|amount|payee"); an empty category removes the key.
+    """
+    if values is None:
+        return {}
+    if not isinstance(values, dict):
+        raise ValidationError("stats_categories")
+    result: dict[str, str] = {}
+    for key, category in values.items():
+        if not isinstance(category, str):
+            raise ValidationError("stats_categories")
+        key = str(key)[:160]
+        category = " ".join(category.split())[:60]
+        if key and category:
+            result[key] = category
+    return dict(list(result.items())[-3000:])
 
 
 CSV_PROFILE_FIELDS = {

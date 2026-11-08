@@ -48,9 +48,22 @@ export class Events {
       const direction = r[1] < 0 ? "expense" : "income";
       const amount = Math.abs(r[1]);
       const target = f.get("target");
+      if (target === "category") {
+        const st = this._state.user.settings || {};
+        const own = { ...(st.stats_categories || {}) };
+        const payee = `n:${nameKey(r[2] || "")}|${direction}`;
+        const single = this._statsRowKey(r);
+        const category = String(f.get("category") || "").trim();
+        delete own[single];
+        if (f.get("remember") || !category) delete own[payee];
+        if (category) own[f.get("remember") ? payee : single] = category;
+        this._dialog = null;
+        this._saveSpecialSettings({ stats_categories: own });
+        return;
+      }
       this._run(async () => {
         if (target === "once") {
-          const item = { name: String(f.get("name") || r[2] || tr("Umsatz", "Transaction")).trim(), direction, amount, category: r[4] || r[3] || tr("Sonstiges", "Other"), icon: "mdi:receipt-text", start_date: r[0], schedule: { frequency: "once", interval: 1 }, confirmations: [{ due_date: r[0], status: "booked", actual_date: r[0], actual_amount: amount }] };
+          const item = { name: String(f.get("name") || r[2] || tr("Umsatz", "Transaction")).trim(), direction, amount, category: String(f.get("category") || "").trim() || r[4] || r[3] || tr("Sonstiges", "Other"), icon: "mdi:receipt-text", start_date: r[0], schedule: { frequency: "once", interval: 1 }, confirmations: [{ due_date: r[0], status: "booked", actual_date: r[0], actual_amount: amount }] };
           await this._ws("import", { data: { format: "haushaltsbuch", items: [item] }, replace: false });
           return;
         }

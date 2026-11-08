@@ -6,6 +6,18 @@ Ob nach einem Update ein Neustart von Home Assistant nötig ist, steht in den
 Release-Notes auf GitHub und in HACS. Der Hinweis wird beim Veröffentlichen
 automatisch aus den geänderten Dateien ermittelt (siehe `scripts/release_notes.py`).
 
+## 1.1.0 – 2026-11-08
+
+### Geändert
+- Statistik, „Ausgaben nach Kategorie“: Umsätze, die einem Posten oder Budget zugeordnet sind, zählen jetzt zur Kategorie dieses Postens (z. B. Miete → Wohnen), auch rückwirkend. Beim Aufklappen stehen die Posten als Unterkategorien. Nur Umsätze ohne Posten behalten die Kategorie der Bank.
+
+### Neu
+- „Umsatz zuordnen“: Wahl **„Nur Kategorie festlegen (ohne Posten)“** für Käufe, die zu keinem Posten gehören, für einen Umsatz oder alle Umsätze eines Empfängers. Feld leer lassen nimmt die Kategorie wieder weg.
+- Ein neuer einmaliger Posten übernimmt die Kategorie aus dem Dialog.
+
+### Behoben
+- Ein Budget, das mitten im Monat beginnt, zählt im ersten Monat den vollen Betrag statt eines Teilbetrags, verteilt auf die restlichen Tage. Preisänderungen gelten für den Monat, in den ihr Datum fällt.
+
 ## 1.0.0 – 2026-11-08
 
 Die erste stabile Version. Ab jetzt bleibt das Datenformat verlässlich: Updates heben die Daten automatisch an und sichern vorher. Alles Neue seit 0.9.2 auf einen Blick (Einzelheiten in den Beta-Versionen darunter):

@@ -210,12 +210,17 @@ def test_user_settings_for_special_items():
     book.set_user_settings("anna", {"special_min_months": 3, "special_min_amount": "50"})
     assert book.user("anna")["settings"] == {
         "special_min_months": 3, "special_min_amount": 50.0, "salary_item_id": None, "stats_ignored": [],
-        "csv_profiles": {},
+        "csv_profiles": {}, "stats_categories": {},
     }
     book.set_user_settings("anna", {"stats_ignored": ["n:verein|expense", "n:verein|expense", ""]})
     assert book.user("anna")["settings"]["stats_ignored"] == ["n:verein|expense"]
     with pytest.raises(ValidationError):
         book.set_user_settings("anna", {"stats_ignored": "n:verein"})
+    book.set_user_settings("anna", {"stats_categories": {"n:baumarkt|expense": "  Haus  ", "r:2026-10-14|23.90|kiosk": "", "": "x"}})
+    assert book.user("anna")["settings"]["stats_categories"] == {"n:baumarkt|expense": "Haus"}
+    for bad in ("Haus", {"n:a|expense": 5}):
+        with pytest.raises(ValidationError):
+            book.set_user_settings("anna", {"stats_categories": bad})
     profile = {"columns": {"date": 1, "amount": "4", "name": 2, "debit": -1}, "header_row": 6, "date": "dmy", "decimal": ",", "x": 1}
     book.set_user_settings("anna", {"csv_profiles": {"buchungstag;betrag": profile}})
     assert book.user("anna")["settings"]["csv_profiles"] == {

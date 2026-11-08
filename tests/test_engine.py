@@ -265,9 +265,9 @@ def test_budget_spreads_over_month_and_counts_as_likely():
     nov, dec = month_summaries([tracked], date(2026, 11, 1), 2, today=date(2026, 11, 10))
     assert nov["entries"][0]["budget_total"] == 600 and nov["entries"][0]["budget_spent"] == 80.5
     assert "budget_total" not in dec["entries"][0]
-    # started mid-month: pro rata
+    # started mid-month: the full budget, spread over the remaining days
     late = item(amount=300, start_date="2026-11-16", schedule={"frequency": "budget"})
-    assert month_summaries([late], date(2026, 11, 1), 1)[0]["expense"] == 150
+    assert month_summaries([late], date(2026, 11, 1), 1)[0]["expense"] == 300
 
 
 def test_rolling_learns_interval_from_booked_visits():
@@ -400,6 +400,29 @@ def test_budget_month_follows_salary_cycle():
     assert find(today) == (date(2026, 10, 29), date(2026, 11, 25))
     status = budget_status(b, today, find)
     assert status["spent"] == 100.0 and status["start"] == "2026-10-29"
+
+
+def test_budget_started_inside_salary_month_shows_full_amount():
+    # Fabian: 500 € for groceries, created on 2 Nov in the salary month
+    # 29 Oct - 25 Nov. The app showed 428,57 € (24 of 28 days) instead of 500 €.
+    from custom_components.haushaltsbuch.engine import budget_amounts, budget_in_range, budget_status, period_finder
+    salary = item(
+        id="gehalt", direction="income", amount=2700.0, start_date="2026-01-01",
+        weekend_shift="previous",
+        schedule={"frequency": "monthly", "interval": 1, "weekday": 3, "week": -1},
+    )
+    b = item(id="essen", amount=500.0, start_date="2026-11-02", schedule={"frequency": "budget", "interval": 1})
+    today = date(2026, 11, 8)
+    find = period_finder([salary, b], "gehalt", today - timedelta(days=60), today + timedelta(days=60))
+    status = budget_status(b, today, find)
+    assert status["budget"] == 500.0 and status["rest"] == 500.0 and status["days_left"] == 18
+    assert budget_in_range(b, date(2026, 10, 29), date(2026, 11, 25), find)[0] == 500.0
+    amounts = budget_amounts(b, date(2026, 10, 29), date(2026, 11, 25), today, find)
+    assert min(amounts) == date(2026, 11, 2) and round(sum(amounts.values()), 2) == 500.0
+    # A price change counts from the budget month its date falls in.
+    b["price_changes"] = [{"from": "2026-11-20", "amount": 600.0}]
+    assert budget_status(b, today, find)["budget"] == 600.0
+    assert budget_status(b, date(2026, 11, 30), find)["budget"] == 600.0
 
 
 def test_zero_budget_counts_only_entered_spendings():
