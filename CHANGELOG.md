@@ -6,6 +6,21 @@ Ob nach einem Update ein Neustart von Home Assistant nötig ist, steht in den
 Release-Notes auf GitHub und in HACS. Der Hinweis wird beim Veröffentlichen
 automatisch aus den geänderten Dateien ermittelt (siehe `scripts/release_notes.py`).
 
+## 1.0.0 – 2026-11-08
+
+Die erste stabile Version. Ab jetzt bleibt das Datenformat verlässlich: Updates heben die Daten automatisch an und sichern vorher. Alles Neue seit 0.9.2 auf einen Blick (Einzelheiten in den Beta-Versionen darunter):
+
+### Neu
+- **CSV-Import der Kontoumsätze**: Outbank, CSV jeder Bank mit „Welche Spalte ist was?“ und CAMT.053. Abgleich mit deinen Posten, Vorschläge für neue Posten und Budgets, Preisänderungen, alte Anbieter laufen unter dem heutigen Posten zusammen.
+- **Tab „Statistik“** mit echten Umsätzen: Monat, Jahr, alle Jahre, Kategorien und Empfänger, dazu Auswertungen wie vergessene Abos, Budgets aus echten Zahlen und Preisentwicklung. Mit Gehaltsmonat laufen auch hier die Monate von Gehalt zu Gehalt.
+- **Sicherungen** im Haushalt-Tab (nur Admins), automatisch vor jedem Import, vor dem Zurückspielen und vor Datenformat-Updates.
+- **Posten duplizieren** und Vorlage **Haus**.
+- Posten: **„Ohne Budgets“** zeigt die festen Kosten; Monatsübersicht: Budgets als „ausgegeben von Budget“.
+
+### Geändert
+- Installation ab Home Assistant 2026.11 über **Einstellungen → Marketplace**.
+- Unter jeder Zahl steht, woher sie kommt: echte Umsätze, Plan oder erwarteter Kontostand.
+
 ## 0.10.0rc11 – 2026-11-07
 
 ### Geändert
