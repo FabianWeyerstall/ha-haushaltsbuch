@@ -11,7 +11,10 @@ const STYLES = `
   .title-short { display: none; }
   @media (max-width: 520px) { .title-long { display: none; } .title-short { display: inline; } }
   .scope { max-width: 50vw; background: rgba(255,255,255,0.15); color: inherit; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; padding: 6px 8px; font-size: 14px; }
-  .scope option { color: var(--primary-text-color); background: var(--card-background-color); }
+  /* Native dropdown lists: the browser draws them with its own (often white) background, but
+     options inherit the theme's text colour. With a dark HA theme that gave light grey on white. */
+  select option, select optgroup { color: var(--primary-text-color); background-color: var(--card-background-color, var(--primary-background-color)); }
+  select option:disabled { color: var(--secondary-text-color); }
   .tabs { display: flex; gap: 4px; overflow-x: auto; padding: 0 8px; background: var(--app-header-background-color, var(--primary-color)); }
   .tab { display: flex; align-items: center; gap: 6px; background: none; border: none; border-bottom: 3px solid transparent; color: var(--app-header-text-color, #fff); opacity: 0.75; padding: 10px 12px; font-size: 14px; cursor: pointer; white-space: nowrap; border-radius: 0; }
   .tab.active { opacity: 1; border-bottom-color: var(--app-header-text-color, #fff); }

@@ -6,6 +6,11 @@ Ob nach einem Update ein Neustart von Home Assistant nötig ist, steht in den
 Release-Notes auf GitHub und in HACS. Der Hinweis wird beim Veröffentlichen
 automatisch aus den geänderten Dateien ermittelt (siehe `scripts/release_notes.py`).
 
+## 1.1.1 – 2026-11-10
+
+### Behoben
+- Ausgeklappte Auswahllisten (z. B. „Umsatz zuordnen“ → „Gehört zu“) waren mit dunklem Design kaum lesbar: hellgraue Schrift auf weißer Liste. Die Einträge haben jetzt die Farben des Designs, in hell und dunkel.
+
 ## 1.1.0 – 2026-11-08
 
 ### Geändert
